@@ -109,7 +109,7 @@ export default function LoginForm() {
                 Forgot password?
               </Link>
               <div>
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link href="/signup" className="text-blue-500 hover:underline transition-colors duration-200">
                   Sign up
                 </Link>

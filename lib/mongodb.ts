@@ -9,7 +9,11 @@ if (!MONGODB_URI) {
 }
 
 declare global {
-  var mongoose: { conn: any; promise: any } | undefined;
+  // eslint-disable-next-line no-var
+  var mongoose: {
+    conn: unknown;
+    promise: unknown;
+  } | undefined;
 }
 
 let cached = global.mongoose || { conn: null, promise: null };
