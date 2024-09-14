@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { BellIcon, MenuIcon, UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from 'next/link'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
@@ -110,7 +111,9 @@ export default function Home() {
             <Button variant="ghost" size="icon">
               <BellIcon className="h-6 w-6" />
             </Button>
-            <Button variant="default">Buy Pro</Button>
+            <Link href="/credit">
+              <Button variant="default">Buy Pro</Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -278,6 +281,23 @@ export default function Home() {
           </Card>
         )}
       </main>
+
+      <footer className="fixed bottom-0 left-0 right-0 bg-white shadow-md">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between">
+          <Link href="/history">
+            <Button variant="ghost">History</Button>
+          </Link>
+          <Link href="/clone">
+            <Button variant="ghost">Clone</Button>
+          </Link>
+          <Link href="/credit">
+            <Button variant="ghost">Credit</Button>
+          </Link>
+          <Link href="/account">
+            <Button variant="ghost">Account</Button>
+          </Link>
+        </div>
+      </footer>
     </div>
   )
 }

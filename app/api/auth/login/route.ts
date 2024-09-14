@@ -26,9 +26,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Here you would typically create a session or JWT token
-    const userWithoutPassword = { ...user.toObject(), password: undefined };
-    return NextResponse.json({ success: true, message: 'Login successful', user: userWithoutPassword });
+    // Set a cookie with the user ID (replace with secure implementation)
+    const response = NextResponse.json({ success: true, message: 'Login successful' });
+    response.cookies.set('token', user._id.toString(), { httpOnly: true, path: '/' });
+    return response;
+
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json({ success: false, message: 'An error occurred during login' }, { status: 500 });
