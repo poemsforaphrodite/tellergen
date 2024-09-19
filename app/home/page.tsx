@@ -4,10 +4,13 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { BellIcon, MenuIcon, UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon } from "lucide-react"
+import { BellIcon, MenuIcon, UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon, StopCircle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from 'next/link'
+
+// Update the type definition
+type CustomMediaRecorder = MediaRecorder & { intervalId?: NodeJS.Timeout };
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
@@ -24,9 +27,13 @@ export default function Home() {
   const [selectedVoice, setSelectedVoice] = useState("")
   const [characterLimit, setCharacterLimit] = useState(1000)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null)
+  const mediaRecorderRef = useRef<CustomMediaRecorder | null>(null)
+  const [recordingDuration, setRecordingDuration] = useState(0)
 
   const voiceCategories = [
-    { category: "Celebrities", voices: ["Morgan Freeman", "Scarlett Johansson", "David Attenborough", "Tom Hanks", "Emma Watson"] },
+    { category: "Celebrities", voices: ["morgan", "Scarlett Johansson", "David Attenborough", "Tom Hanks", "Emma Watson"] },
     { category: "Characters", voices: ["Batman", "Spongebob", "Darth Vader", "Homer Simpson", "Mario"] },
     { category: "Streamers", voices: ["PewDiePie", "Pokimane", "Ninja", "Shroud", "Tfue"] },
     { category: "Politicians", voices: ["Barack Obama", "Donald Trump", "Angela Merkel", "Justin Trudeau", "Emmanuel Macron"] },
@@ -86,6 +93,7 @@ export default function Home() {
       const endpoint = activeTab === "TTS" ? "/api/tts" : "/api/clone-voice"
       const formData = new FormData()
       formData.append("text", text)
+      formData.append("voice", selectedVoice)
       if (audioFile) {
         formData.append("audio_file", audioFile)
       }
@@ -140,6 +148,44 @@ export default function Home() {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+    }
+  }
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream) as CustomMediaRecorder
+      mediaRecorderRef.current = mediaRecorder
+      
+      const audioChunks: BlobPart[] = []
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data)
+      }
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' })
+        setRecordedAudio(audioBlob)
+        setAudioFile(new File([audioBlob], "recorded_audio.wav", { type: 'audio/wav' }))
+      }
+
+      mediaRecorder.start()
+      setIsRecording(true)
+      setRecordingDuration(0)
+      const intervalId = setInterval(() => {
+        setRecordingDuration(prev => prev + 1)
+      }, 1000)
+      mediaRecorderRef.current.intervalId = intervalId
+    } catch (error) {
+      console.error("Error accessing microphone:", error)
+      setError("Failed to access microphone. Please check your permissions.")
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop()
+      clearInterval(mediaRecorderRef.current.intervalId)
+      setIsRecording(false)
     }
   }
 
@@ -269,25 +315,71 @@ export default function Home() {
               <TabsContent value="Clone voice">
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-semibold mb-2">Upload your voice</h2>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="file"
-                        accept="audio/*"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                      />
-                      <Button 
-                        variant="outline" 
-                        className="flex-grow"
-                        onClick={handleFileUpload}
-                      >
-                        {audioFile ? audioFile.name : "Choose file"}
-                      </Button>
-                      <Button size="icon" onClick={handleFileUpload}>
-                        <UploadIcon className="h-4 w-4" />
-                      </Button>
+                    <h2 className="text-lg font-semibold mb-4">Upload or Record your voice</h2>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-4">
+                        <Input
+                          type="file"
+                          accept="audio/*"
+                          className="hidden"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                        />
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={handleFileUpload}
+                        >
+                          <UploadIcon className="h-4 w-4 mr-2" />
+                          {audioFile ? "Change file" : "Upload audio"}
+                        </Button>
+                        <Button
+                          variant={isRecording ? "destructive" : "default"}
+                          onClick={isRecording ? stopRecording : startRecording}
+                          className="flex-1"
+                        >
+                          {isRecording ? (
+                            <>
+                              <StopCircle className="h-4 w-4 mr-2" />
+                              Stop Recording
+                            </>
+                          ) : (
+                            <>
+                              <MicIcon className="h-4 w-4 mr-2" />
+                              Start Recording
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      
+                      {audioFile && !isRecording && (
+                        <div className="bg-gray-100 p-4 rounded-md">
+                          <p className="text-sm font-medium mb-2">Selected Audio:</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">{audioFile.name}</span>
+                            <Button variant="ghost" size="sm" onClick={() => setAudioFile(null)}>
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {isRecording && (
+                        <div className="bg-red-100 p-4 rounded-md flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-red-500 rounded-full mr-3 animate-pulse" />
+                            <span className="text-sm font-medium text-red-700">Recording in progress...</span>
+                          </div>
+                          <span className="text-sm text-red-700">{recordingDuration}s</span>
+                        </div>
+                      )}
+                      
+                      {recordedAudio && !isRecording && (
+                        <div className="bg-gray-100 p-4 rounded-md">
+                          <p className="text-sm font-medium mb-2">Recorded Audio:</p>
+                          <audio src={URL.createObjectURL(recordedAudio)} controls className="w-full" />
+                        </div>
+                      )}
                     </div>
                   </div>
                   
