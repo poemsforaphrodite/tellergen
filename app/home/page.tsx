@@ -22,6 +22,8 @@ export default function Home() {
   const [progress, setProgress] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedVoice, setSelectedVoice] = useState("")
+  const [characterLimit, setCharacterLimit] = useState(1000)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   const voiceCategories = [
     { category: "Celebrities", voices: ["Morgan Freeman", "Scarlett Johansson", "David Attenborough", "Tom Hanks", "Emma Watson"] },
@@ -30,6 +32,36 @@ export default function Home() {
     { category: "Politicians", voices: ["Barack Obama", "Donald Trump", "Angela Merkel", "Justin Trudeau", "Emmanuel Macron"] },
     { category: "Athletes", voices: ["Serena Williams", "Michael Jordan", "Lionel Messi", "LeBron James", "Usain Bolt"] },
   ]
+
+  useEffect(() => {
+    checkLoginStatus()
+  }, [])
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/status')
+      const data = await response.json()
+      setIsLoggedIn(data.isLoggedIn)
+      setCharacterLimit(data.isLoggedIn ? 5000 : 1000)
+    } catch (error) {
+      console.error('Failed to check login status:', error)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST' })
+      if (response.ok) {
+        setIsLoggedIn(false)
+        setCharacterLimit(1000)
+        // Optionally, you can redirect the user or show a success message
+      } else {
+        console.error('Logout failed')
+      }
+    } catch (error) {
+      console.error('Error during logout:', error)
+    }
+  }
 
   useEffect(() => {
     setSelectedVoice("")
@@ -125,9 +157,18 @@ export default function Home() {
             <Button variant="ghost" size="icon">
               <BellIcon className="h-6 w-6" />
             </Button>
-            <Link href="/credit">
-              <Button variant="default">Buy Pro</Button>
-            </Link>
+            {isLoggedIn ? (
+              <Button variant="outline" onClick={handleLogout}>Logout</Button>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="outline">Login</Button>
+                </Link>
+                <Link href="/signup">
+                  <Button variant="default">Buy Pro</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -205,10 +246,16 @@ export default function Home() {
                     placeholder="Type your text here..."
                     className="min-h-[200px] resize-none"
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => setText(e.target.value.slice(0, characterLimit))}
+                    maxLength={characterLimit}
                   />
-                  <div className="flex justify-end">
-                    <span className="text-sm text-gray-500">{text.length} / 5000</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">
+                      {isLoggedIn ? null : "Login for 5000 character limit"}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {text.length} / {characterLimit}
+                    </span>
                   </div>
                 </div>
               </TabsContent>
@@ -248,10 +295,16 @@ export default function Home() {
                     placeholder="Type your text here..."
                     className="min-h-[200px] resize-none"
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => setText(e.target.value.slice(0, characterLimit))}
+                    maxLength={characterLimit}
                   />
-                  <div className="flex justify-end">
-                    <span className="text-sm text-gray-500">{text.length} / 5000</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">
+                      {isLoggedIn ? null : "Login for 5000 character limit"}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {text.length} / {characterLimit}
+                    </span>
                   </div>
                 </div>
               </TabsContent>

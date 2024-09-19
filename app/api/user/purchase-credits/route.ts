@@ -3,6 +3,14 @@ import dbConnect from '@/lib/mongodb'
 import User from '@/models/User'
 import { getUserIdFromRequest } from '@/lib/auth'
 
+const creditOptions = [
+  { credits: 50000, price: 99 },
+  { credits: 200000, price: 249 },
+  { credits: 500000, price: 499 },
+  { credits: 1000000, price: 799 },
+  { credits: 2000000, price: 1299 },
+]
+
 export async function POST(request: Request) {
   await dbConnect()
 
@@ -12,16 +20,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { amount } = await request.json()
+  const { credits } = await request.json()
 
-  if (!amount || amount <= 0) {
-    return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+  const option = creditOptions.find(opt => opt.credits === credits)
+  if (!option) {
+    return NextResponse.json({ error: 'Invalid credit amount' }, { status: 400 })
   }
 
   try {
     const user = await User.findByIdAndUpdate(
       userId,
-      { $inc: { credits: amount } },
+      { $inc: { credits: option.credits } },
       { new: true, select: 'credits' }
     )
 
