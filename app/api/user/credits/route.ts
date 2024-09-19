@@ -3,10 +3,10 @@ import dbConnect from '@/lib/mongodb'
 import User from '@/models/User'
 import { getUserIdFromRequest } from '@/lib/auth'
 
-export async function GET(request: Request) {
+export async function GET() {
   await dbConnect()
 
-  const userId = getUserIdFromRequest(request)
+  const userId = getUserIdFromRequest()
 
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

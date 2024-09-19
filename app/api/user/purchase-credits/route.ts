@@ -14,7 +14,7 @@ const creditOptions = [
 export async function POST(request: Request) {
   await dbConnect()
 
-  const userId = getUserIdFromRequest(request)
+  const userId = getUserIdFromRequest()
 
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
