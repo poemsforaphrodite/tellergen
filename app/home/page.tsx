@@ -20,6 +20,20 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const [progress, setProgress] = useState(0)
+  const [selectedCategory, setSelectedCategory] = useState("")
+  const [selectedVoice, setSelectedVoice] = useState("")
+
+  const voiceCategories = [
+    { category: "Celebrities", voices: ["Morgan Freeman", "Scarlett Johansson", "David Attenborough", "Tom Hanks", "Emma Watson"] },
+    { category: "Characters", voices: ["Batman", "Spongebob", "Darth Vader", "Homer Simpson", "Mario"] },
+    { category: "Streamers", voices: ["PewDiePie", "Pokimane", "Ninja", "Shroud", "Tfue"] },
+    { category: "Politicians", voices: ["Barack Obama", "Donald Trump", "Angela Merkel", "Justin Trudeau", "Emmanuel Macron"] },
+    { category: "Athletes", voices: ["Serena Williams", "Michael Jordan", "Lionel Messi", "LeBron James", "Usain Bolt"] },
+  ]
+
+  useEffect(() => {
+    setSelectedVoice("")
+  }, [selectedCategory])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -144,12 +158,46 @@ export default function Home() {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-lg font-semibold mb-2">Select voice</h2>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                      {['Image', 'Mark', 'John', 'Sarah', 'Emma', 'Alex'].map((label, index) => (
-                        <Button key={index} variant="outline" className="w-full h-12">
-                          {label}
-                        </Button>
-                      ))}
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="select-category" className="block text-sm font-medium text-gray-700 mb-1">
+                          Category
+                        </label>
+                        <select
+                          id="select-category"
+                          className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
+                          value={selectedCategory}
+                          onChange={(e) => setSelectedCategory(e.target.value)}
+                        >
+                          <option value="">Select a category</option>
+                          {voiceCategories.map((group, index) => (
+                            <option key={index} value={group.category}>
+                              {group.category}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {selectedCategory && (
+                        <div>
+                          <label htmlFor="select-voice" className="block text-sm font-medium text-gray-700 mb-1">
+                            Voice
+                          </label>
+                          <select
+                            id="select-voice"
+                            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
+                            value={selectedVoice}
+                            onChange={(e) => setSelectedVoice(e.target.value)}
+                          >
+                            <option value="">Select a voice</option>
+                            {voiceCategories.find(group => group.category === selectedCategory)?.voices.map((voice, index) => (
+                              <option key={index} value={voice}>
+                                {voice}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -284,10 +332,7 @@ export default function Home() {
 
       <footer className="fixed bottom-0 left-0 right-0 bg-white shadow-md">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between">
-          <Link href="/history">
-            <Button variant="ghost">History</Button>
-          </Link>
-          <Link href="/clone">
+          <Link href="/home">
             <Button variant="ghost">Clone</Button>
           </Link>
           <Link href="/credit">
