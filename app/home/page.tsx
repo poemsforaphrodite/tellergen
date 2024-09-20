@@ -491,7 +491,7 @@ export default function Home() {
                     ))}
                   </ul>
                   <Button onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4">
-                    Buy Pro (${plan.price})
+                    Buy Pro (rs {plan.price})
                   </Button>
                 </div>
               ))}
