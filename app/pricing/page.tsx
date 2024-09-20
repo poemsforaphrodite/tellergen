@@ -4,72 +4,75 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import { HomeIcon, CreditCardIcon, UserIcon, CheckIcon } from "lucide-react"
+import { useRouter } from 'next/navigation'
 
 export default function PricingPage() {
+  const router = useRouter()
+
   const plans = [
     {
-      name: "Basic",
-      price: "Free",
+      title: "TellerGen Text to Speech Pro",
+      price: 499,
       features: [
-        "1,000 characters per month",
-        "5 basic voices",
-        "Standard audio quality",
-        "Basic support",
-      ],
+        "100+ Premium and Celebrity voices",
+        "High quality audio download",
+        "Ultra realistic voices",
+        "1 million characters"
+      ]
     },
     {
-      name: "Pro",
-      price: "$19.99/month",
+      title: "TellerGen Voice Cloning Pro",
+      price: 999,
       features: [
-        "100,000 characters per month",
-        "100+ premium voices",
-        "High-quality audio",
-        "Priority support",
-        "Voice cloning (1 voice)",
-        "Talking image generation (10/month)",
-      ],
+        "Clone up to 1 million characters",
+        "High quality audio",
+        "Ultra realistic cloned voice",
+        "Fast processing"
+      ]
     },
     {
-      name: "Enterprise",
-      price: "Custom",
+      title: "TellerGen Talking Image Pro",
+      price: 799,
       features: [
-        "Unlimited characters",
-        "All premium voices",
-        "Ultra-high quality audio",
-        "24/7 dedicated support",
-        "Unlimited voice cloning",
-        "Unlimited talking image generation",
-        "API access",
-      ],
-    },
+        "Up to 1000 minutes of video generation",
+        "High quality image to video",
+        "Realistic head movement",
+        "Perfect lip syncing"
+      ]
+    }
   ]
 
+  const handleBuyPro = (product: string, price: number) => {
+    router.push(`/checkout?product=${product.toLowerCase().replace(/\s+/g, '_')}&price=${price}`)
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 text-gray-900 p-4 pb-16">
-      <Card className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900 p-4 pb-16">
+      <Card className="max-w-6xl mx-auto backdrop-blur-md bg-white/90 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Pricing Plans</CardTitle>
+          <CardTitle className="text-3xl font-bold text-indigo-800 text-center">Our Pro Plans</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {plans.map((plan) => (
-              <Card key={plan.name} className="flex flex-col">
-                <CardHeader>
-                  <CardTitle>{plan.name}</CardTitle>
-                  <p className="text-2xl font-bold">{plan.price}</p>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <ul className="space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <Button className="mt-4">Choose Plan</Button>
-              </Card>
+            {plans.map((plan, index) => (
+              <div key={index} className="bg-white p-6 rounded-lg shadow-md space-y-4 border border-indigo-100 hover:border-indigo-300 transition-all duration-300">
+                <h3 className="text-xl font-semibold text-indigo-800">{plan.title}</h3>
+                <p className="text-3xl font-bold text-indigo-600">Rs{plan.price}</p>
+                <ul className="space-y-2">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-center text-gray-700">
+                      <CheckIcon className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={() => handleBuyPro(plan.title, plan.price)} 
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
+                >
+                  Buy Pro
+                </Button>
+              </div>
             ))}
           </div>
         </CardContent>

@@ -205,10 +205,22 @@ export default function Home() {
             <Link href="/home" className="flex items-center">
               <Image src="/logo.png" alt="Mitra Logo" width={150} height={75} className="h-10 w-auto" />
             </Link>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/about"><span className="text-gray-600 hover:text-indigo-600 transition">About</span></Link>
-              <Link href="/contact"><span className="text-gray-600 hover:text-indigo-600 transition">Contact</span></Link>
-              <Link href="/pricing"><span className="text-gray-600 hover:text-indigo-600 transition">Pricing</span></Link>
+            <nav className="hidden md:flex space-x-1">
+              <Link href="/about">
+                <Button variant="ghost" className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors duration-200">
+                  About
+                </Button>
+              </Link>
+              <Link href="/contact">
+                <Button variant="ghost" className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors duration-200">
+                  Contact
+                </Button>
+              </Link>
+              <Link href="/pricing">
+                <Button variant="ghost" className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors duration-200">
+                  Pricing
+                </Button>
+              </Link>
             </nav>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="icon" className="relative">

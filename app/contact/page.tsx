@@ -30,40 +30,50 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 text-gray-900 p-4 pb-16">
-      <Card className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900 p-4 pb-16">
+      <Card className="max-w-4xl mx-auto backdrop-blur-md bg-white/90 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Contact Us</CardTitle>
+          <CardTitle className="text-3xl font-bold text-indigo-800 text-center">Contact Us</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 mb-6">
-            <p>We'd love to hear from you! Whether you have a question about our services, need technical support, or want to provide feedback, the TellerGen team is here to help.</p>
+          <div className="space-y-6 mb-6">
+            <p className="text-gray-700">We'd love to hear from you! Whether you have a question about our services, need technical support, or want to provide feedback, the TellerGen team is here to help.</p>
             
-            <h3 className="text-xl font-semibold">How to Reach Us</h3>
+            <h3 className="text-2xl font-semibold text-indigo-800">How to Reach Us</h3>
             
-            <div>
-              <h4 className="font-semibold">General Inquiries</h4>
-              <p>Email: support@tellergen.com</p>
-              <p>Phone: +91 9244039177</p>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-indigo-700">General Inquiries</h4>
+                <p className="text-gray-700">For general questions, partnership opportunities, or media inquiries:</p>
+                <p className="text-gray-700">Email: support@tellergen.com</p>
+                <p className="text-gray-700">Phone: +91 9244039177</p>
+                <p className="text-gray-700">Our team will respond to your inquiry within 1-2 business days.</p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-indigo-700">Technical Support</h4>
+                <p className="text-gray-700">If you are experiencing issues with our Text-to-Speech, Talking Image, or Voice Cloning services:</p>
+                <p className="text-gray-700">Email: support@tellergen.com</p>
+                <p className="text-gray-700">Phone: +91 9244039177</p>
+                <p className="text-gray-700">Support Hours: Monday - Friday, 9:00 AM - 5:00 PM [Insert Time Zone]</p>
+                <p className="text-gray-700">For faster assistance, please include your account or subscription ID, a detailed description of the issue, and screenshots or error messages (if applicable).</p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-indigo-700">Billing and Account Support</h4>
+                <p className="text-gray-700">For questions related to billing, payments, or account management:</p>
+                <p className="text-gray-700">Email: support@tellergen.com</p>
+                <p className="text-gray-700">Phone: +91 9244039177</p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-indigo-700">Business Address</h4>
+                <p className="text-gray-700">Ward no. 11, Baaikunthpur, Chhattisgaarh 497335</p>
+              </div>
             </div>
             
-            <div>
-              <h4 className="font-semibold">Technical Support</h4>
-              <p>Email: support@tellergen.com</p>
-              <p>Phone: +91 9244039177</p>
-              <p>Support Hours: Monday - Friday, 9:00 AM - 5:00 PM [Insert Time Zone]</p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold">Billing and Account Support</h4>
-              <p>Email: support@tellergen.com</p>
-              <p>Phone: +91 9244039177</p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold">Business Address</h4>
-              <p>Ward no. 11, Baaikunthpur, Chhattisgaarh 497335</p>
-            </div>
+            <p className="text-gray-700">We value your feedback and are always looking for ways to improve our services. Don't hesitate to reach out – we're here to help!</p>
+            <p className="text-gray-700">Thank you for choosing TellerGen. Let's talk!</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,6 +84,7 @@ export default function ContactPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                className="mt-1"
               />
             </div>
             <div>
@@ -84,6 +95,7 @@ export default function ContactPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="mt-1"
               />
             </div>
             <div>
@@ -93,9 +105,10 @@ export default function ContactPage() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 required
+                className="mt-1"
               />
             </div>
-            <Button type="submit">Send Message</Button>
+            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">Send Message</Button>
           </form>
           {submitStatus && <p className="mt-4 text-green-600">{submitStatus}</p>}
         </CardContent>

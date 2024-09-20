@@ -85,91 +85,101 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 text-gray-900 p-4 pb-16">
-      <Card className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900 p-4 pb-16">
+      <Card className="max-w-4xl mx-auto backdrop-blur-md bg-white/90 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Account</CardTitle>
+          <CardTitle className="text-3xl font-bold text-indigo-800">Account</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-center text-gray-600">Loading...</p>
           ) : error ? (
-            <p className="text-red-500">Error: {error}</p>
+            <p className="text-center text-red-500">Error: {error}</p>
           ) : user ? (
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarFallback className="text-2xl">
+            <div className="space-y-8">
+              <div className="flex items-center space-x-6 bg-indigo-50 p-6 rounded-lg">
+                <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                  <AvatarFallback className="text-3xl bg-indigo-200 text-indigo-800">
                     {user.username.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="text-2xl font-bold">{user.username}</h2>
-                  <p className="text-gray-500">{user.email}</p>
+                  <h2 className="text-3xl font-bold text-indigo-800">{user.username}</h2>
+                  <p className="text-indigo-600">{user.email}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label>Credits</Label>
-                  <p className="text-xl font-semibold">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-xl font-semibold text-indigo-800 mb-4">Credits</h3>
+                  <p className="text-3xl font-bold text-indigo-600">
                     {user.credits !== undefined ? user.credits.toLocaleString() : 'N/A'}
                   </p>
                 </div>
-                <div>
-                  <Label>Subscriptions</Label>
-                  <ul className="list-disc list-inside">
-                    <li>TTS Pro: {user.subscriptions?.tts_pro ? 'Active' : 'Inactive'}</li>
-                    <li>Talking Image Pro: {user.subscriptions?.talking_image_pro ? 'Active' : 'Inactive'}</li>
-                    <li>Clone Voice Pro: {user.subscriptions?.clone_voice_pro ? 'Active' : 'Inactive'}</li>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-xl font-semibold text-indigo-800 mb-4">Subscriptions</h3>
+                  <ul className="space-y-2">
+                    {Object.entries(user.subscriptions || {}).map(([key, value]) => (
+                      <li key={key} className="flex items-center">
+                        <div className={`w-3 h-3 rounded-full mr-2 ${value ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <span className="capitalize">{key.replace(/_/g, ' ')}: </span>
+                        <span className={`ml-2 font-semibold ${value ? 'text-green-600' : 'text-red-600'}`}>
+                          {value ? 'Active' : 'Inactive'}
+                        </span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
-              
-              <form onSubmit={handlePasswordChange} className="space-y-4">
-                <h3 className="text-lg font-semibold">Change Password</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
+
+              <form onSubmit={handlePasswordChange} className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-semibold text-indigo-800 mb-4">Change Password</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
                 {passwordChangeError && (
-                  <Alert variant="destructive">
+                  <Alert variant="destructive" className="mt-4">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>{passwordChangeError}</AlertDescription>
                   </Alert>
                 )}
                 {passwordChangeSuccess && (
-                  <Alert variant="default" className="bg-green-100 text-green-800">
+                  <Alert variant="default" className="mt-4 bg-green-100 text-green-800">
                     <AlertDescription>{passwordChangeSuccess}</AlertDescription>
                   </Alert>
                 )}
-                <Button type="submit">Change Password</Button>
+                <Button type="submit" className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
+                  Change Password
+                </Button>
               </form>
             </div>
           ) : null}

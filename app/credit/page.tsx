@@ -47,25 +47,33 @@ export default function CreditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 text-gray-900 p-4 pb-16">
-      <Card className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900 p-4 pb-16">
+      <Card className="max-w-4xl mx-auto backdrop-blur-md bg-white/90 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Credit</CardTitle>
+          <CardTitle className="text-3xl font-bold text-indigo-800">Credit</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-center text-gray-600">Loading...</p>
           ) : error ? (
-            <p className="text-red-500">{error}</p>
+            <p className="text-center text-red-500">{error}</p>
           ) : (
             <>
-              <p className="mb-4">Your current credit balance: {credits.toLocaleString()}</p>
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Purchase Credits:</h3>
+              <div className="mb-8 p-6 bg-indigo-50 rounded-lg shadow-inner">
+                <h3 className="text-xl font-semibold text-indigo-800 mb-2">Your Current Balance</h3>
+                <p className="text-4xl font-bold text-indigo-600">{credits.toLocaleString()} Credits</p>
+              </div>
+              <div className="space-y-6">
+                <h3 className="text-2xl font-semibold text-indigo-800">Purchase Credits:</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {creditOptions.map(({ credits, price }) => (
-                    <Button key={credits} onClick={() => handlePurchase(credits, price)}>
-                      Buy {credits.toLocaleString()} Credits (Rs{price})
+                    <Button 
+                      key={credits} 
+                      onClick={() => handlePurchase(credits, price)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                      Buy {credits.toLocaleString()} Credits
+                      <span className="block text-sm mt-1">Rs{price}</span>
                     </Button>
                   ))}
                 </div>
