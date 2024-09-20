@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { BellIcon, MenuIcon, UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon, StopCircle } from "lucide-react"
+import { BellIcon, MenuIcon, UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon, StopCircle, HomeIcon, CreditCardIcon, XIcon, CheckIcon } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 // Update the type definition
 type CustomMediaRecorder = MediaRecorder & { intervalId?: NodeJS.Timeout };
@@ -31,6 +33,8 @@ export default function Home() {
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null)
   const mediaRecorderRef = useRef<CustomMediaRecorder | null>(null)
   const [recordingDuration, setRecordingDuration] = useState(0)
+  const router = useRouter()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const voiceCategories = [
     { category: "Celebrities", voices: [{ name: "Morgan Freeman", free: true }, { name: "Scarlett Johansson", free: false }, { name: "David Attenborough", free: false }, { name: "Tom Hanks", free: false }, { name: "Emma Watson", free: false }] },
@@ -189,58 +193,75 @@ export default function Home() {
     }
   }
 
+  const handleBuyPro = (product: string, price: number) => {
+    router.push(`/checkout?product=${product}&price=${price}`)
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 text-gray-900">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="lg:hidden">
-              <MenuIcon className="h-6 w-6" />
-            </Button>
-            <h1 className="text-2xl font-bold text-primary">Mitra</h1>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900">
+      <header className="bg-white shadow-md sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/home" className="flex items-center">
+              <Image src="/logo.png" alt="Mitra Logo" width={150} height={75} className="h-10 w-auto" />
+            </Link>
+            <nav className="hidden md:flex space-x-8">
+              <Link href="/about"><span className="text-gray-600 hover:text-indigo-600 transition">About</span></Link>
+              <Link href="/contact"><span className="text-gray-600 hover:text-indigo-600 transition">Contact</span></Link>
+              <Link href="/pricing"><span className="text-gray-600 hover:text-indigo-600 transition">Pricing</span></Link>
+            </nav>
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="icon" className="relative">
+                <BellIcon className="h-5 w-5 text-gray-600" />
+                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
+              </Button>
+              {isLoggedIn ? (
+                <Button variant="outline" onClick={handleLogout} className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">Logout</Button>
+              ) : (
+                <>
+                  <Link href="/login"><Button variant="ghost" className="text-indigo-600 hover:bg-indigo-50">Login</Button></Link>
+                  <Link href="/signup"><Button variant="default" className="bg-indigo-600 hover:bg-indigo-700 text-white">Sign Up</Button></Link>
+                </>
+              )}
+              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                {isMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon">
-              <BellIcon className="h-6 w-6" />
-            </Button>
-            {isLoggedIn ? (
-              <Button variant="outline" onClick={handleLogout}>Logout</Button>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="outline">Login</Button>
-                </Link>
-                <Link href="/signup">
-                  <Button variant="default">Buy Pro</Button>
-                </Link>
-              </>
-            )}
-          </div>
+          {isMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 space-y-2">
+              <Link href="/about"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">About</Button></Link>
+              <Link href="/contact"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Contact</Button></Link>
+              <Link href="/pricing"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Pricing</Button></Link>
+              <Link href="/privacy-policy"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Privacy Policy</Button></Link>
+              <Link href="/disclaimer"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Disclaimer</Button></Link>
+            </div>
+          )}
         </div>
       </header>
       
-      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <Card className="backdrop-blur-sm bg-white/80">
+      <main className="flex-grow max-w-5xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8 space-y-12">
+        <Card className="backdrop-blur-md bg-white/90 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl">Voice Generation</CardTitle>
+            <CardTitle className="text-3xl font-bold text-indigo-800">Voice Generation</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="TTS" className="flex items-center gap-2">
-                  <MicIcon className="w-4 h-4" />
+          <CardContent className="space-y-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-8 bg-indigo-100 p-1 rounded-lg">
+                <TabsTrigger value="TTS" className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all">
+                  <MicIcon className="w-4 h-4 mr-2" />
                   TTS
                 </TabsTrigger>
-                <TabsTrigger value="Talking Image" className="flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" />
+                <TabsTrigger value="Talking Image" className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all">
+                  <ImageIcon className="w-4 h-4 mr-2" />
                   Talking Image
                 </TabsTrigger>
                 <TabsTrigger 
                   value="Clone voice" 
-                  className="flex items-center gap-2"
+                  className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all"
                   disabled={!isLoggedIn}
                 >
-                  <UserIcon className="w-4 h-4" />
+                  <UserIcon className="w-4 h-4 mr-2" />
                   Clone voice {!isLoggedIn && '(Pro)'}
                 </TabsTrigger>
               </TabsList>
@@ -311,8 +332,8 @@ export default function Home() {
               </TabsContent>
               
               <TabsContent value="Talking Image">
-                <div className="flex items-center justify-center h-64 bg-gray-200 rounded-lg">
-                  <p className="text-2xl font-bold text-gray-400">Coming Soon</p>
+                <div className="flex items-center justify-center h-64 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-200">
+                  <p className="text-2xl font-bold text-indigo-300">Coming Soon</p>
                 </div>
               </TabsContent>
               
@@ -418,14 +439,14 @@ export default function Home() {
           </CardContent>
           <CardFooter>
             <Button 
-              className="w-full" 
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
               size="lg" 
               onClick={handleGenerate} 
               disabled={isLoading || (activeTab === "Clone voice" && !audioFile)}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Generating...
                 </>
               ) : (
@@ -435,6 +456,83 @@ export default function Home() {
           </CardFooter>
         </Card>
 
+        {/* Pricing Plans */}
+        <Card className="backdrop-blur-md bg-white/90 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-3xl font-bold text-indigo-800">Our Pro Plans</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { title: "TellerGen Text to Speech Pro", price: 499, features: ["100+ Premium and Celebrity voices", "High quality audio download", "Ultra realistic voices", "1 million characters"] },
+                { title: "TellerGen Voice Cloning Pro", price: 999, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice", "Fast processing"] },
+                { title: "TellerGen Talking Image Pro", price: 799, features: ["Up to 1000 minutes of video generation", "High quality image to video", "Realistic head movement", "Perfect lip syncing"] }
+              ].map((plan, index) => (
+                <div key={index} className="bg-indigo-50 p-6 rounded-lg shadow-md space-y-4">
+                  <h3 className="text-xl font-semibold text-indigo-800">{plan.title}</h3>
+                  <ul className="space-y-2">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-center text-gray-700">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-2" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4">
+                    Buy Pro (${plan.price})
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Why Choose TellerGen Card */}
+        <Card className="backdrop-blur-md bg-white/90 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-3xl font-bold text-indigo-800">Why Choose TellerGen?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-6 text-gray-700">
+              TellerGen offers cutting-edge AI-powered text-to-speech voice cloning and talking image generation services. Here's why you should choose TellerGen:
+            </p>
+            <ul className="space-y-4">
+              {[
+                { title: "Realistic Voice Cloning", description: "Advanced AI creates lifelike voice replicas for personalized experiences." },
+                { title: "Dynamic Talking Images", description: "Bring your images to life with innovative technology." },
+                { title: "User-Friendly Interface", description: "Intuitive platform accessible to users of all skill levels." },
+                { title: "Versatile Applications", description: "Enhance projects with engaging multimedia elements." },
+                { title: "High-Quality Output", description: "Prioritizing natural-sounding voices and realistic animations." }
+              ].map((item, index) => (
+                <li key={index} className="flex items-start">
+                  <div className="flex-shrink-0 h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center mr-4 mt-1">
+                    <CheckIcon className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-indigo-800">{item.title}</h4>
+                    <p className="text-gray-600">{item.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        {/* Privacy Policy and Disclaimer links */}
+        <div className="text-center space-y-2 mt-8">
+          <p className="text-sm text-gray-600">
+            By using our services, you agree to our{' '}
+            <Link href="/privacy-policy" className="text-blue-600 hover:underline">
+              Privacy Policy
+            </Link>{' '}
+            and{' '}
+            <Link href="/disclaimer" className="text-blue-600 hover:underline">
+              Disclaimer
+            </Link>
+            .
+          </p>
+        </div>
+
         {error && (
           <div className="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
             Error: {error}
@@ -442,9 +540,9 @@ export default function Home() {
         )}
 
         {generatedAudio && (
-          <Card className="mt-6 backdrop-blur-sm bg-white/80">
+          <Card className="mt-6 backdrop-blur-md bg-white/90 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold">Generated Audio</CardTitle>
+              <CardTitle className="text-xl font-semibold text-indigo-800">Generated Audio</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
@@ -462,7 +560,7 @@ export default function Home() {
                     )}
                   </Button>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-medium">Your Generated Audio</h3>
+                    <h3 className="text-lg font-medium text-indigo-800">Your Generated Audio</h3>
                     <p className="text-sm text-gray-500">Click to play/pause</p>
                   </div>
                 </div>
@@ -473,7 +571,7 @@ export default function Home() {
               <div className="mt-4">
                 <div className="h-2 bg-gray-200 rounded-full">
                   <div 
-                    className="h-2 bg-primary rounded-full transition-all duration-300 ease-in-out" 
+                    className="h-2 bg-indigo-600 rounded-full transition-all duration-300 ease-in-out" 
                     style={{ width: `${progress}%` }} 
                   />
                 </div>
@@ -489,16 +587,25 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white shadow-md">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between">
+      <footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-md shadow-lg rounded-full px-8 py-4">
+        <div className="flex space-x-12">
           <Link href="/home">
-            <Button variant="ghost">Clone</Button>
+            <Button variant="ghost" size="sm" className="text-indigo-600 hover:bg-indigo-50">
+              <HomeIcon className="h-5 w-5 mr-2" />
+              Home
+            </Button>
           </Link>
           <Link href="/credit">
-            <Button variant="ghost">Credit</Button>
+            <Button variant="ghost" size="sm" className="text-indigo-600 hover:bg-indigo-50">
+              <CreditCardIcon className="h-5 w-5 mr-2" />
+              Credit
+            </Button>
           </Link>
           <Link href="/account">
-            <Button variant="ghost">Account</Button>
+            <Button variant="ghost" size="sm" className="text-indigo-600 hover:bg-indigo-50">
+              <UserIcon className="h-5 w-5 mr-2" />
+              Account
+            </Button>
           </Link>
         </div>
       </footer>

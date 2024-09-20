@@ -19,6 +19,11 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  subscriptions: {
+    tts_pro: { type: Boolean, default: false },
+    talking_image_pro: { type: Boolean, default: false },
+    clone_voice_pro: { type: Boolean, default: false },
+  },
 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

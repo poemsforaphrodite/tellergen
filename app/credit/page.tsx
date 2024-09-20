@@ -1,14 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from 'next/navigation'  // Add this import
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
+import { HomeIcon, CreditCardIcon, UserIcon } from "lucide-react"
 
 export default function CreditPage() {
   const [credits, setCredits] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()  // Add this line
 
   useEffect(() => {
     fetchCredits()
@@ -38,23 +41,9 @@ export default function CreditPage() {
     { credits: 2000000, price: 1299 },
   ]
 
-  const handlePurchase = async (credits: number) => {
-    try {
-      const response = await fetch('/api/user/purchase-credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credits }),
-      })
-      const data = await response.json()
-      if (response.ok) {
-        setCredits(data.newCredits)
-        alert(`Successfully purchased ${credits.toLocaleString()} credits!`)
-      } else {
-        setError(data.message || 'Failed to purchase credits')
-      }
-    } catch (err) {
-      setError('An error occurred while purchasing credits')
-    }
+  const handlePurchase = async (credits: number, price: number) => {
+    // Instead of making a purchase directly, redirect to the checkout page
+    router.push(`/checkout?product=${credits}_credits&price=${price}`)
   }
 
   return (
@@ -75,7 +64,7 @@ export default function CreditPage() {
                 <h3 className="text-lg font-semibold">Purchase Credits:</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {creditOptions.map(({ credits, price }) => (
-                    <Button key={credits} onClick={() => handlePurchase(credits)}>
+                    <Button key={credits} onClick={() => handlePurchase(credits, price)}>
                       Buy {credits.toLocaleString()} Credits (Rs{price})
                     </Button>
                   ))}
@@ -86,16 +75,25 @@ export default function CreditPage() {
         </CardContent>
       </Card>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white shadow-md">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-2 flex justify-center space-x-8">
           <Link href="/home">
-            <Button variant="ghost">Clone</Button>
+            <Button variant="ghost" size="sm" className="text-sm">
+              <HomeIcon className="h-4 w-4 mr-2" />
+              Home
+            </Button>
           </Link>
           <Link href="/credit">
-            <Button variant="ghost">Credit</Button>
+            <Button variant="ghost" size="sm" className="text-sm">
+              <CreditCardIcon className="h-4 w-4 mr-2" />
+              Credit
+            </Button>
           </Link>
           <Link href="/account">
-            <Button variant="ghost">Account</Button>
+            <Button variant="ghost" size="sm" className="text-sm">
+              <UserIcon className="h-4 w-4 mr-2" />
+              Account
+            </Button>
           </Link>
         </div>
       </footer>

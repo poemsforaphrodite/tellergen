@@ -44,6 +44,10 @@ export default function SignupForm() {
     }
   }
 
+  const handleBuyPro = () => {
+    router.push('/checkout?product=pro_subscription&price=999') // Adjust the price as needed
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
@@ -133,6 +137,9 @@ export default function SignupForm() {
                 Log in
               </Link>
             </p>
+            <Link href="/signup">
+              <Button variant="default" onClick={handleBuyPro}>Buy Pro</Button>
+            </Link>
           </CardFooter>
         </form>
       </Card>
