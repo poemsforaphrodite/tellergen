@@ -33,11 +33,11 @@ export default function Home() {
   const [recordingDuration, setRecordingDuration] = useState(0)
 
   const voiceCategories = [
-    { category: "Celebrities", voices: ["morgan", "Scarlett Johansson", "David Attenborough", "Tom Hanks", "Emma Watson"] },
-    { category: "Characters", voices: ["Batman", "Spongebob", "Darth Vader", "Homer Simpson", "Mario"] },
-    { category: "Streamers", voices: ["PewDiePie", "Pokimane", "Ninja", "Shroud", "Tfue"] },
-    { category: "Politicians", voices: ["Barack Obama", "Donald Trump", "Angela Merkel", "Justin Trudeau", "Emmanuel Macron"] },
-    { category: "Athletes", voices: ["Serena Williams", "Michael Jordan", "Lionel Messi", "LeBron James", "Usain Bolt"] },
+    { category: "Celebrities", voices: [{ name: "Morgan Freeman", free: true }, { name: "Scarlett Johansson", free: false }, { name: "David Attenborough", free: false }, { name: "Tom Hanks", free: false }, { name: "Emma Watson", free: false }] },
+    { category: "Characters", voices: [{ name: "Batman", free: true }, { name: "Spongebob", free: false }, { name: "Darth Vader", free: false }, { name: "Homer Simpson", free: false }, { name: "Mario", free: false }] },
+    { category: "Streamers", voices: [{ name: "PewDiePie", free: true }, { name: "Pokimane", free: false }, { name: "Ninja", free: false }, { name: "Shroud", free: false }, { name: "Tfue", free: false }] },
+    { category: "Politicians", voices: [{ name: "Barack Obama", free: true }, { name: "Donald Trump", free: false }, { name: "Angela Merkel", free: false }, { name: "Justin Trudeau", free: false }, { name: "Emmanuel Macron", free: false }] },
+    { category: "Athletes", voices: [{ name: "Serena Williams", free: true }, { name: "Michael Jordan", free: false }, { name: "Lionel Messi", free: false }, { name: "LeBron James", free: false }, { name: "Usain Bolt", free: false }] },
   ]
 
   useEffect(() => {
@@ -235,9 +235,13 @@ export default function Home() {
                   <ImageIcon className="w-4 h-4" />
                   Talking Image
                 </TabsTrigger>
-                <TabsTrigger value="Clone voice" className="flex items-center gap-2">
+                <TabsTrigger 
+                  value="Clone voice" 
+                  className="flex items-center gap-2"
+                  disabled={!isLoggedIn}
+                >
                   <UserIcon className="w-4 h-4" />
-                  Clone voice
+                  Clone voice {!isLoggedIn && '(Pro)'}
                 </TabsTrigger>
               </TabsList>
               
@@ -278,8 +282,8 @@ export default function Home() {
                           >
                             <option value="">Select a voice</option>
                             {voiceCategories.find(group => group.category === selectedCategory)?.voices.map((voice, index) => (
-                              <option key={index} value={voice}>
-                                {voice}
+                              <option key={index} value={voice.name} disabled={!isLoggedIn && !voice.free}>
+                                {voice.name} {!isLoggedIn && !voice.free ? '(Pro)' : ''}
                               </option>
                             ))}
                           </select>
@@ -313,92 +317,102 @@ export default function Home() {
               </TabsContent>
               
               <TabsContent value="Clone voice">
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-lg font-semibold mb-4">Upload or Record your voice</h2>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <Input
-                          type="file"
-                          accept="audio/*"
-                          className="hidden"
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                        />
-                        <Button 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={handleFileUpload}
-                        >
-                          <UploadIcon className="h-4 w-4 mr-2" />
-                          {audioFile ? "Change file" : "Upload audio"}
-                        </Button>
-                        <Button
-                          variant={isRecording ? "destructive" : "default"}
-                          onClick={isRecording ? stopRecording : startRecording}
-                          className="flex-1"
-                        >
-                          {isRecording ? (
-                            <>
-                              <StopCircle className="h-4 w-4 mr-2" />
-                              Stop Recording
-                            </>
-                          ) : (
-                            <>
-                              <MicIcon className="h-4 w-4 mr-2" />
-                              Start Recording
-                            </>
-                          )}
-                        </Button>
+                {isLoggedIn ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-lg font-semibold mb-4">Upload or Record your voice</h2>
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-4">
+                          <Input
+                            type="file"
+                            accept="audio/*"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                          />
+                          <Button 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={handleFileUpload}
+                          >
+                            <UploadIcon className="h-4 w-4 mr-2" />
+                            {audioFile ? "Change file" : "Upload audio"}
+                          </Button>
+                          <Button
+                            variant={isRecording ? "destructive" : "default"}
+                            onClick={isRecording ? stopRecording : startRecording}
+                            className="flex-1"
+                          >
+                            {isRecording ? (
+                              <>
+                                <StopCircle className="h-4 w-4 mr-2" />
+                                Stop Recording
+                              </>
+                            ) : (
+                              <>
+                                <MicIcon className="h-4 w-4 mr-2" />
+                                Start Recording
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        
+                        {audioFile && !isRecording && (
+                          <div className="bg-gray-100 p-4 rounded-md">
+                            <p className="text-sm font-medium mb-2">Selected Audio:</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">{audioFile.name}</span>
+                              <Button variant="ghost" size="sm" onClick={() => setAudioFile(null)}>
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {isRecording && (
+                          <div className="bg-red-100 p-4 rounded-md flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 bg-red-500 rounded-full mr-3 animate-pulse" />
+                              <span className="text-sm font-medium text-red-700">Recording in progress...</span>
+                            </div>
+                            <span className="text-sm text-red-700">{recordingDuration}s</span>
+                          </div>
+                        )}
+                        
+                        {recordedAudio && !isRecording && (
+                          <div className="bg-gray-100 p-4 rounded-md">
+                            <p className="text-sm font-medium mb-2">Recorded Audio:</p>
+                            <audio src={URL.createObjectURL(recordedAudio)} controls className="w-full" />
+                          </div>
+                        )}
                       </div>
-                      
-                      {audioFile && !isRecording && (
-                        <div className="bg-gray-100 p-4 rounded-md">
-                          <p className="text-sm font-medium mb-2">Selected Audio:</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">{audioFile.name}</span>
-                            <Button variant="ghost" size="sm" onClick={() => setAudioFile(null)}>
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {isRecording && (
-                        <div className="bg-red-100 p-4 rounded-md flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-3 h-3 bg-red-500 rounded-full mr-3 animate-pulse" />
-                            <span className="text-sm font-medium text-red-700">Recording in progress...</span>
-                          </div>
-                          <span className="text-sm text-red-700">{recordingDuration}s</span>
-                        </div>
-                      )}
-                      
-                      {recordedAudio && !isRecording && (
-                        <div className="bg-gray-100 p-4 rounded-md">
-                          <p className="text-sm font-medium mb-2">Recorded Audio:</p>
-                          <audio src={URL.createObjectURL(recordedAudio)} controls className="w-full" />
-                        </div>
-                      )}
+                    </div>
+                    
+                    <Textarea
+                      placeholder="Type your text here..."
+                      className="min-h-[200px] resize-none"
+                      value={text}
+                      onChange={(e) => setText(e.target.value.slice(0, characterLimit))}
+                      maxLength={characterLimit}
+                    />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">
+                        {isLoggedIn ? null : "Login for 5000 character limit"}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {text.length} / {characterLimit}
+                      </span>
                     </div>
                   </div>
-                  
-                  <Textarea
-                    placeholder="Type your text here..."
-                    className="min-h-[200px] resize-none"
-                    value={text}
-                    onChange={(e) => setText(e.target.value.slice(0, characterLimit))}
-                    maxLength={characterLimit}
-                  />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">
-                      {isLoggedIn ? null : "Login for 5000 character limit"}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {text.length} / {characterLimit}
-                    </span>
+                ) : (
+                  <div className="p-4 bg-gray-100 rounded-md text-center">
+                    <p className="text-lg font-semibold mb-2">Pro Feature</p>
+                    <p className="text-gray-600 mb-4">Please log in to access the Clone voice feature.</p>
+                    <Link href="/login">
+                      <Button variant="default">Log In</Button>
+                    </Link>
                   </div>
-                </div>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
