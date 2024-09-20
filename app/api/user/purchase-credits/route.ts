@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { product, price } = await request.json()
+  const { product } = await request.json()
 
   try {
     let updateQuery = {}
