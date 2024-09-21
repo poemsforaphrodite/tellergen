@@ -11,12 +11,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 export default function CheckoutPage() {
   const [product, setProduct] = useState<{ name: string; price: number; credits?: number } | null>(null)
   const [loading, setLoading] = useState(true)
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
+  const [fullName, setFullName] = useState("")
+  const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
-  const [cardNumber, setCardNumber] = useState("")
-  const [expiryDate, setExpiryDate] = useState("")
-  const [cvv, setCvv] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
@@ -50,12 +47,9 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           product: product?.name,
           price: product?.price,
-          firstName,
-          lastName,
+          fullName,
+          phone,
           email,
-          cardNumber,
-          expiryDate,
-          cvv
         }),
       })
 
@@ -87,6 +81,10 @@ export default function CheckoutPage() {
     return <div>Invalid product</div>
   }
 
+  const subtotal = product ? product.price : 0
+  const gst = subtotal * 0.18
+  const total = subtotal + gst
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -104,76 +102,66 @@ export default function CheckoutPage() {
               <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
-          <div>
-            <Label htmlFor="product">Product</Label>
-            <Input id="product" value={product.name} readOnly />
-          </div>
-          <div>
-            <Label htmlFor="price">Price</Label>
-            <Input id="price" value={`Rs${product.price}`} readOnly />
-          </div>
-          <div>
-            <Label htmlFor="firstName">First Name</Label>
-            <Input 
-              id="firstName" 
-              value={firstName} 
-              onChange={(e) => setFirstName(e.target.value)} 
-              required 
-            />
-          </div>
-          <div>
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input 
-              id="lastName" 
-              value={lastName} 
-              onChange={(e) => setLastName(e.target.value)} 
-              required 
-            />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
-            />
-          </div>
-          <div>
-            <Label htmlFor="cardNumber">Card Number</Label>
-            <Input 
-              id="cardNumber" 
-              value={cardNumber} 
-              onChange={(e) => setCardNumber(e.target.value)} 
-              required 
-            />
-          </div>
-          <div className="flex space-x-4">
-            <div className="flex-1">
-              <Label htmlFor="expiryDate">Expiry Date</Label>
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold">Billing details</h2>
+            <div>
+              <Label htmlFor="fullName">Full Name *</Label>
               <Input 
-                id="expiryDate" 
-                placeholder="MM/YY" 
-                value={expiryDate} 
-                onChange={(e) => setExpiryDate(e.target.value)} 
+                id="fullName" 
+                value={fullName} 
+                onChange={(e) => setFullName(e.target.value)} 
                 required 
               />
             </div>
-            <div className="flex-1">
-              <Label htmlFor="cvv">CVV</Label>
+            <div>
+              <Label htmlFor="phone">Phone *</Label>
               <Input 
-                id="cvv" 
-                value={cvv} 
-                onChange={(e) => setCvv(e.target.value)} 
+                id="phone" 
+                type="tel"
+                value={phone} 
+                onChange={(e) => setPhone(e.target.value)} 
                 required 
               />
+            </div>
+            <div>
+              <Label htmlFor="email">Email address *</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                required 
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold">Your order</h2>
+            <div className="flex justify-between">
+              <span>Product</span>
+              <span>Subtotal</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{product?.name}</span>
+              <span>x 1</span>
+              <span>₹{product?.price.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>₹{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>GST@18%</span>
+              <span>₹{gst.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-semibold">
+              <span>Total</span>
+              <span>₹{total.toFixed(2)}</span>
             </div>
           </div>
         </CardContent>
         <CardFooter>
           <Button className="w-full" onClick={handleCheckout}>
-            Complete Purchase
+            Proceed to Payment
           </Button>
         </CardFooter>
       </Card>

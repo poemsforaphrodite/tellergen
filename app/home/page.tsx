@@ -246,7 +246,8 @@ export default function Home() {
               <Link href="/contact"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Contact</Button></Link>
               <Link href="/pricing"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Pricing</Button></Link>
               <Link href="/privacy-policy"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Privacy Policy</Button></Link>
-              <Link href="/disclaimer"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Disclaimer</Button></Link>
+              <Link href="/disclaimer"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Terms & Conditions</Button></Link>
+              <Link href="/refund-policy"><Button variant="ghost" className="w-full justify-start hover:bg-indigo-50">Refund Policy</Button></Link>
             </div>
           )}
         </div>
@@ -536,10 +537,14 @@ export default function Home() {
             By using our services, you agree to our{' '}
             <Link href="/privacy-policy" className="text-blue-600 hover:underline">
               Privacy Policy
-            </Link>{' '}
-            and{' '}
+            </Link>
+            ,{' '}
             <Link href="/disclaimer" className="text-blue-600 hover:underline">
-              Disclaimer
+              Terms & Conditions
+            </Link>
+            , and{' '}
+            <Link href="/refund-policy" className="text-blue-600 hover:underline">
+              Refund Policy
             </Link>
             .
           </p>

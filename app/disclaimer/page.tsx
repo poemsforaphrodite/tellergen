@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import { HomeIcon, CreditCardIcon, UserIcon } from "lucide-react"
 
-export default function DisclaimerPage() {
+export default function TermsAndConditionsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 text-gray-900 p-4 pb-16">
       <Card className="max-w-4xl mx-auto">
