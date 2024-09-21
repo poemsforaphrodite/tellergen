@@ -37,11 +37,41 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const voiceCategories = [
-    { category: "Celebrities", voices: [{ name: "Morgan Freeman", free: true }, { name: "Scarlett Johansson", free: false }, { name: "David Attenborough", free: false }, { name: "Tom Hanks", free: false }, { name: "Emma Watson", free: false }] },
-    { category: "Characters", voices: [{ name: "Batman", free: true }, { name: "Spongebob", free: false }, { name: "Darth Vader", free: false }, { name: "Homer Simpson", free: false }, { name: "Mario", free: false }] },
-    { category: "Streamers", voices: [{ name: "PewDiePie", free: true }, { name: "Pokimane", free: false }, { name: "Ninja", free: false }, { name: "Shroud", free: false }, { name: "Tfue", free: false }] },
-    { category: "Politicians", voices: [{ name: "Barack Obama", free: true }, { name: "Donald Trump", free: false }, { name: "Angela Merkel", free: false }, { name: "Justin Trudeau", free: false }, { name: "Emmanuel Macron", free: false }] },
-    { category: "Athletes", voices: [{ name: "Serena Williams", free: true }, { name: "Michael Jordan", free: false }, { name: "Lionel Messi", free: false }, { name: "LeBron James", free: false }, { name: "Usain Bolt", free: false }] },
+    { category: "Celebrities", voices: [
+      { name: "Morgan Freeman", free: true },
+      { name: "Scarlett Johansson", free: false },
+      { name: "David Attenborough", free: false },
+      { name: "Tom Hanks", free: false },
+      { name: "Emma Watson", free: false }
+    ]},
+    { category: "Characters", voices: [
+      { name: "Batman", free: true },
+      { name: "Spongebob", free: false },
+      { name: "Darth Vader", free: false },
+      { name: "Homer Simpson", free: false },
+      { name: "Mario", free: false }
+    ]},
+    { category: "Streamers", voices: [
+      { name: "PewDiePie", free: true },
+      { name: "Pokimane", free: false },
+      { name: "Ninja", free: false },
+      { name: "Shroud", free: false },
+      { name: "Tfue", free: false }
+    ]},
+    { category: "Politicians", voices: [
+      { name: "Barack Obama", free: true },
+      { name: "Donald Trump", free: false },
+      { name: "Angela Merkel", free: false },
+      { name: "Justin Trudeau", free: false },
+      { name: "Emmanuel Macron", free: false }
+    ]},
+    { category: "Athletes", voices: [
+      { name: "Serena Williams", free: true },
+      { name: "Michael Jordan", free: false },
+      { name: "Lionel Messi", free: false },
+      { name: "LeBron James", free: false },
+      { name: "Usain Bolt", free: false }
+    ]},
   ]
 
   useEffect(() => {
