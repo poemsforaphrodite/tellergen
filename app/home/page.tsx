@@ -499,6 +499,59 @@ export default function Home() {
           </CardFooter>
         </Card>
 
+        {error && (
+          <div className="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            Error: {error}
+          </div>
+        )}
+
+        {generatedAudio && (
+          <Card className="backdrop-blur-md bg-white/90 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-indigo-800">Generated Audio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-12 w-12 rounded-full"
+                    onClick={togglePlayPause}
+                  >
+                    {isPlaying ? (
+                      <PauseIcon className="h-6 w-6" />
+                    ) : (
+                      <PlayIcon className="h-6 w-6" />
+                    )}
+                  </Button>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-medium text-indigo-800">Your Generated Audio</h3>
+                    <p className="text-sm text-gray-500">Click to play/pause</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="icon" onClick={handleDownload}>
+                  <DownloadIcon className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="mt-4">
+                <div className="h-2 bg-gray-200 rounded-full">
+                  <div 
+                    className="h-2 bg-indigo-600 rounded-full transition-all duration-300 ease-in-out" 
+                    style={{ width: `${progress}%` }} 
+                  />
+                </div>
+              </div>
+              <audio
+                ref={audioRef}
+                src={generatedAudio}
+                className="hidden"
+                onEnded={() => setIsPlaying(false)}
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Pricing Plans */}
         <Card className="backdrop-blur-md bg-white/90 shadow-lg">
           <CardHeader>
@@ -579,59 +632,6 @@ export default function Home() {
             .
           </p>
         </div>
-
-        {error && (
-          <div className="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            Error: {error}
-          </div>
-        )}
-
-        {generatedAudio && (
-          <Card className="mt-6 backdrop-blur-md bg-white/90 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold text-indigo-800">Generated Audio</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-12 w-12 rounded-full"
-                    onClick={togglePlayPause}
-                  >
-                    {isPlaying ? (
-                      <PauseIcon className="h-6 w-6" />
-                    ) : (
-                      <PlayIcon className="h-6 w-6" />
-                    )}
-                  </Button>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-medium text-indigo-800">Your Generated Audio</h3>
-                    <p className="text-sm text-gray-500">Click to play/pause</p>
-                  </div>
-                </div>
-                <Button variant="outline" size="icon" onClick={handleDownload}>
-                  <DownloadIcon className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="mt-4">
-                <div className="h-2 bg-gray-200 rounded-full">
-                  <div 
-                    className="h-2 bg-indigo-600 rounded-full transition-all duration-300 ease-in-out" 
-                    style={{ width: `${progress}%` }} 
-                  />
-                </div>
-              </div>
-              <audio
-                ref={audioRef}
-                src={generatedAudio}
-                className="hidden"
-                onEnded={() => setIsPlaying(false)}
-              />
-            </CardContent>
-          </Card>
-        )}
       </main>
 
       <footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-md shadow-lg rounded-full px-8 py-4">
