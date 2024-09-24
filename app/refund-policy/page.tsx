@@ -46,9 +46,6 @@ export default function RefundPolicyPage() {
             </li>
           </ul>
           <p>
-            If any refund is approved as mentioned in exception cases it will be credited back to your original payment method within 5 to 10 working days.
-          </p>
-          <p>
             To request a review of your case, please contact us at support@tellergen.com within 14 days of your purchase. Include your account details, transaction ID, and a description of the issue.
           </p>
 
@@ -56,7 +53,9 @@ export default function RefundPolicyPage() {
           <p>
             You may cancel your subscription or service at any time, but you will not receive a refund for any remaining period of your subscription or for any unused services. Your access to the service will continue until the end of your current billing cycle.
           </p>
-
+          <p>
+          If any refund is approved as mentioned in exception cases it will be credited back to your original payment method within 5 to 10 working days
+          </p>
           <h3 className="text-xl font-semibold">Contact Us</h3>
           <p>
             If you have any questions or concerns about our Refund Policy, please reach out to us:
