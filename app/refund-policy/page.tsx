@@ -46,6 +46,9 @@ export default function RefundPolicyPage() {
             </li>
           </ul>
           <p>
+            If any refund is approved as mentioned in exception cases it will be credited back to your original payment method within 5 to 10 working days.
+          </p>
+          <p>
             To request a review of your case, please contact us at support@tellergen.com within 14 days of your purchase. Include your account details, transaction ID, and a description of the issue.
           </p>
 

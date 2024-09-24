@@ -283,7 +283,7 @@ export default function Home() {
         </div>
       </header>
       
-      <main className="flex-grow max-w-5xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8 space-y-12">
+      <main className="flex-grow max-w-5xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8 space-y-12 mb-20">
         <Card className="backdrop-blur-md bg-white/90 shadow-lg">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-indigo-800">Voice Generation</CardTitle>
