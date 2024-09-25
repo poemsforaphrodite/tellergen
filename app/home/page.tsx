@@ -4,12 +4,13 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { BellIcon, MenuIcon, UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon, StopCircle, HomeIcon, CreditCardIcon, XIcon, CheckIcon } from "lucide-react"
+import { BellIcon, MenuIcon, UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon, StopCircle, HomeIcon, CreditCardIcon, XIcon, CheckIcon, ShieldIcon } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { Client } from "@gradio/client";
 
 // Update the type definition
 type CustomMediaRecorder = MediaRecorder & { intervalId?: NodeJS.Timeout };
@@ -35,6 +36,9 @@ export default function Home() {
   const [recordingDuration, setRecordingDuration] = useState(0)
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   const voiceCategories = [
     { category: "Celebrities", voices: [
@@ -227,6 +231,49 @@ export default function Home() {
     router.push(`/checkout?product=${product}&price=${price}`)
   }
 
+  const handleImageUpload = () => {
+    imageInputRef.current?.click()
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+    }
+  }
+
+  const handleGenerateTalkingImage = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const formData = new FormData()
+      if (imageFile) {
+        formData.append("image", imageFile)
+      }
+      if (audioFile) {
+        formData.append("audio", audioFile)
+      }
+
+      const response = await fetch("/api/talking-image", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.videoData) {
+        setGeneratedVideo(result.videoData)
+      } else {
+        throw new Error(result.error || "Failed to generate talking image video")
+      }
+    } catch (error) {
+      console.error("Error generating talking image video:", error)
+      setError((error as Error).message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900">
       <header className="bg-white shadow-md sticky top-0 z-10">
@@ -268,6 +315,11 @@ export default function Home() {
               <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 {isMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
               </Button>
+              <Link href="/admin">
+                <Button variant="ghost" size="icon">
+                  <ShieldIcon className="h-5 w-5 text-gray-600" />
+                </Button>
+              </Link>
             </div>
           </div>
           {isMenuOpen && (
@@ -375,8 +427,68 @@ export default function Home() {
               </TabsContent>
               
               <TabsContent value="Talking Image">
-                <div className="flex items-center justify-center h-64 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-200">
-                  <p className="text-2xl font-bold text-indigo-300">Coming Soon</p>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-semibold mb-4">Upload Image and Audio</h2>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-4">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          ref={imageInputRef}
+                          onChange={handleImageChange}
+                        />
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={handleImageUpload}
+                        >
+                          <UploadIcon className="h-4 w-4 mr-2" />
+                          {imageFile ? "Change image" : "Upload image"}
+                        </Button>
+                        <Input
+                          type="file"
+                          accept="audio/*"
+                          className="hidden"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                        />
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={handleFileUpload}
+                        >
+                          <UploadIcon className="h-4 w-4 mr-2" />
+                          {audioFile ? "Change audio" : "Upload audio"}
+                        </Button>
+                      </div>
+                      
+                      {imageFile && (
+                        <div className="bg-gray-100 p-4 rounded-md">
+                          <p className="text-sm font-medium mb-2">Selected Image:</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">{imageFile.name}</span>
+                            <Button variant="ghost" size="sm" onClick={() => setImageFile(null)}>
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {audioFile && (
+                        <div className="bg-gray-100 p-4 rounded-md">
+                          <p className="text-sm font-medium mb-2">Selected Audio:</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">{audioFile.name}</span>
+                            <Button variant="ghost" size="sm" onClick={() => setAudioFile(null)}>
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
               
@@ -484,8 +596,8 @@ export default function Home() {
             <Button 
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
               size="lg" 
-              onClick={handleGenerate} 
-              disabled={isLoading || (activeTab === "Clone voice" && !audioFile)}
+              onClick={activeTab === "Talking Image" ? handleGenerateTalkingImage : handleGenerate} 
+              disabled={isLoading || (activeTab === "Clone voice" && !audioFile) || (activeTab === "Talking Image" && (!imageFile || !audioFile))}
             >
               {isLoading ? (
                 <>
@@ -548,6 +660,20 @@ export default function Home() {
                 className="hidden"
                 onEnded={() => setIsPlaying(false)}
               />
+            </CardContent>
+          </Card>
+        )}
+
+        {generatedVideo && (
+          <Card className="backdrop-blur-md bg-white/90 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-indigo-800">Generated Talking Image Video</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <video controls className="w-full">
+                <source src={generatedVideo} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </CardContent>
           </Card>
         )}
