@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Loader2, UploadIcon } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function AdminPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -16,8 +15,6 @@ export default function AdminPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [message, setMessage] = useState("")
-  const [voiceCategory, setVoiceCategory] = useState("")
-  const [voiceName, setVoiceName] = useState("")
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -89,39 +86,6 @@ export default function AdminPage() {
     }
   }
 
-  const handleVoiceUpload = async () => {
-    if (!file || !voiceCategory || !voiceName) {
-      setMessage("Please fill in all fields for voice upload")
-      return
-    }
-
-    setIsUploading(true)
-    setMessage("")
-
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("category", voiceCategory)
-    formData.append("name", voiceName)
-
-    try {
-      const response = await fetch("/api/admin/upload-voice", {
-        method: "POST",
-        body: formData,
-      })
-
-      if (response.ok) {
-        setMessage("Voice uploaded successfully")
-      } else {
-        const error = await response.text()
-        setMessage(`Voice upload failed: ${error}`)
-      }
-    } catch (error) {
-      setMessage(`Voice upload failed: ${error}`)
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
       <h1 className="text-3xl font-bold text-indigo-800 mb-8">Admin Dashboard</h1>
@@ -183,48 +147,6 @@ export default function AdminPage() {
               </>
             ) : (
               "Update Home Page"
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
-
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Upload Voice to Hugging Face</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Input type="file" onChange={handleFileChange} className="mb-4" accept="audio/*" />
-          <Select onValueChange={setVoiceCategory} value={voiceCategory}>
-            <SelectTrigger className="mb-4">
-              <SelectValue placeholder="Select voice category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="celebrities">Celebrities</SelectItem>
-              <SelectItem value="characters">Characters</SelectItem>
-              <SelectItem value="streamers">Streamers</SelectItem>
-              <SelectItem value="politicians">Politicians</SelectItem>
-              <SelectItem value="athletes">Athletes</SelectItem>
-            </SelectContent>
-          </Select>
-          <Input 
-            placeholder="Voice name" 
-            value={voiceName} 
-            onChange={(e) => setVoiceName(e.target.value)}
-            className="mb-4"
-          />
-        </CardContent>
-        <CardFooter>
-          <Button onClick={handleVoiceUpload} disabled={isUploading}>
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading Voice...
-              </>
-            ) : (
-              <>
-                <UploadIcon className="mr-2 h-4 w-4" />
-                Upload Voice
-              </>
             )}
           </Button>
         </CardFooter>

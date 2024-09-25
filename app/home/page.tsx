@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Client } from "@gradio/client";
 
 // Update the type definition
 type CustomMediaRecorder = MediaRecorder & { intervalId?: NodeJS.Timeout };
