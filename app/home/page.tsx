@@ -38,44 +38,35 @@ export default function Home() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const [voiceCategories, setVoiceCategories] = useState<Array<{
+    _id: string;
+    category: string;
+    voices: Array<{ name: string; free: boolean }>;
+  }>>([])
 
-  const voiceCategories = [
-    { category: "Celebrities", voices: [
-      { name: "Morgan Freeman", free: true },
-      { name: "Scarlett Johansson", free: false },
-      { name: "David Attenborough", free: false },
-      { name: "Tom Hanks", free: false },
-      { name: "Emma Watson", free: false }
-    ]},
-    { category: "Characters", voices: [
-      { name: "Batman", free: true },
-      { name: "Spongebob", free: false },
-      { name: "Darth Vader", free: false },
-      { name: "Homer Simpson", free: false },
-      { name: "Mario", free: false }
-    ]},
-    { category: "Streamers", voices: [
-      { name: "PewDiePie", free: true },
-      { name: "Pokimane", free: false },
-      { name: "Ninja", free: false },
-      { name: "Shroud", free: false },
-      { name: "Tfue", free: false }
-    ]},
-    { category: "Politicians", voices: [
-      { name: "Barack Obama", free: true },
-      { name: "Donald Trump", free: false },
-      { name: "Angela Merkel", free: false },
-      { name: "Justin Trudeau", free: false },
-      { name: "Emmanuel Macron", free: false }
-    ]},
-    { category: "Athletes", voices: [
-      { name: "Serena Williams", free: true },
-      { name: "Michael Jordan", free: false },
-      { name: "Lionel Messi", free: false },
-      { name: "LeBron James", free: false },
-      { name: "Usain Bolt", free: false }
-    ]},
-  ]
+  useEffect(() => {
+    console.log('useEffect for fetchVoiceCategories called')
+    fetchVoiceCategories()
+  }, [])
+
+  const fetchVoiceCategories = async () => {
+    console.log('Fetching voice categories...')
+    try {
+      const response = await fetch('/api/voice-categories')
+      console.log('API response status:', response.status)
+      
+      const data = await response.json()
+      console.log('Fetched voice categories data:', JSON.stringify(data, null, 2))
+      
+      if (response.ok) {
+        setVoiceCategories(data)
+      } else {
+        console.error('Failed to fetch voice categories:', data.error)
+      }
+    } catch (error) {
+      console.error('Error fetching voice categories:', error)
+    }
+  }
 
   useEffect(() => {
     checkLoginStatus()
@@ -273,6 +264,10 @@ export default function Home() {
     }
   }
 
+  useEffect(() => {
+    console.log('voiceCategories updated:', voiceCategories)
+  }, [voiceCategories])
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900">
       <header className="bg-white shadow-md sticky top-0 z-10">
@@ -376,8 +371,8 @@ export default function Home() {
                           onChange={(e) => setSelectedCategory(e.target.value)}
                         >
                           <option value="">Select a category</option>
-                          {voiceCategories.map((group, index) => (
-                            <option key={index} value={group.category}>
+                          {voiceCategories.map((group) => (
+                            <option key={group._id} value={group.category}>
                               {group.category}
                             </option>
                           ))}
