@@ -1,29 +1,45 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-const UserSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: [true, 'Please provide a username'],
-    unique: true,
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide an email'],
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-  },
-  credits: {
-    type: Number,
-    default: 0,
-  },
+interface Transaction {
+  transactionId: string;
+  merchantId: string;
+  amount: number;
+  status: string;
+  // Remove the credits field from here
+}
+
+export interface UserDocument extends Document {
+  username: string;
+  email: string;
+  password: string;
+  credits: number;
   subscriptions: {
-    tts_pro: { type: Boolean, default: false },
-    talking_image_pro: { type: Boolean, default: false },
-    clone_voice_pro: { type: Boolean, default: false },
-  },
+    [key: string]: boolean;
+  };
+  transactions: Transaction[];
+}
+
+const TransactionSchema: Schema = new Schema({
+  transactionId: { type: String, required: true, unique: true },
+  merchantId: { type: String, required: true },
+  amount: { type: Number, required: true },
+  status: { type: String, required: true },
+  // Remove the credits field from here
 });
 
-export default mongoose.models.User || mongoose.model('User', UserSchema);
+const UserSchema: Schema = new Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  credits: { type: Number, default: 0 },
+  subscriptions: {
+    type: Map,
+    of: Boolean,
+  },
+  transactions: { type: [TransactionSchema], default: [] },
+});
+
+// Create an index on transactions.transactionId for faster lookup
+UserSchema.index({ 'transactions.transactionId': 1 });
+
+export default mongoose.models.User || mongoose.model<UserDocument>('User', UserSchema);
