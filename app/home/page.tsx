@@ -45,26 +45,21 @@ export default function Home() {
   }>>([])
 
   useEffect(() => {
-    console.log('useEffect for fetchVoiceCategories called')
     fetchVoiceCategories()
   }, [])
 
   const fetchVoiceCategories = async () => {
-    console.log('Fetching voice categories...')
     try {
       const response = await fetch('/api/voice-categories')
-      console.log('API response status:', response.status)
-      
       const data = await response.json()
-      console.log('Fetched voice categories data:', JSON.stringify(data, null, 2))
       
       if (response.ok) {
         setVoiceCategories(data)
       } else {
-        console.error('Failed to fetch voice categories:', data.error)
+        // Handle error silently or update state to show error message
       }
     } catch (error) {
-      console.error('Error fetching voice categories:', error)
+      // Handle error silently or update state to show error message
     }
   }
 
@@ -79,7 +74,7 @@ export default function Home() {
       setIsLoggedIn(data.isLoggedIn)
       setCharacterLimit(data.isLoggedIn ? 5000 : 1000)
     } catch (error) {
-      console.error('Failed to check login status:', error)
+      // Handle error silently or update state to show error message
     }
   }
 
@@ -91,10 +86,10 @@ export default function Home() {
         setCharacterLimit(1000)
         // Optionally, you can redirect the user or show a success message
       } else {
-        console.error('Logout failed')
+        // Handle logout failure silently or update state to show error message
       }
     } catch (error) {
-      console.error('Error during logout:', error)
+      // Handle error silently or update state to show error message
     }
   }
 
@@ -265,7 +260,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    console.log('voiceCategories updated:', voiceCategories)
+   // console.log('voiceCategories updated:', voiceCategories)
   }, [voiceCategories])
 
   return (

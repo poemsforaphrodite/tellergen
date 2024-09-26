@@ -10,6 +10,7 @@ export async function POST(request: Request) {
   console.log('Login attempt:', { email }); // Don't log passwords
 
   try {
+    // Explicitly specify the collection name before the query
     const user = await User.findOne({ email });
     console.log('User found:', user ? 'Yes' : 'No');
     
