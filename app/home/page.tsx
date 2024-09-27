@@ -262,6 +262,20 @@ export default function Home() {
         formData.append("audio", audioFile)
       }
 
+      // Get audio duration
+      const audioDuration = await getAudioDuration(audioFile)
+      
+      // Calculate credits needed: 1 credit per 10 seconds, rounded up
+      const creditsNeeded = Math.ceil(audioDuration / 10)
+
+      // Check if the user has enough credits
+      const creditsResponse = await fetch('/api/user/credits')
+      const creditsData = await creditsResponse.json()
+      
+      if (creditsData.credits < creditsNeeded) {
+        throw new Error("Not enough credits. Please purchase more credits to continue.")
+      }
+
       const response = await fetch("/api/talking-image", {
         method: "POST",
         body: formData,
@@ -271,6 +285,19 @@ export default function Home() {
 
       if (response.ok && result.videoData) {
         setGeneratedVideo(result.videoData)
+        
+        // Deduct credits
+        const updateCreditsResponse = await fetch('/api/user/update-credits', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ creditsUsed: creditsNeeded }),
+        })
+        
+        if (!updateCreditsResponse.ok) {
+          console.error("Failed to update credits")
+        }
       } else {
         throw new Error(result.error || "Failed to generate talking image video")
       }
@@ -280,6 +307,25 @@ export default function Home() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Helper function to get audio duration
+  const getAudioDuration = (file: File | null): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("No audio file provided"))
+        return
+      }
+
+      const audio = new Audio()
+      audio.onloadedmetadata = () => {
+        resolve(audio.duration)
+      }
+      audio.onerror = () => {
+        reject(new Error("Error loading audio file"))
+      }
+      audio.src = URL.createObjectURL(file)
+    })
   }
 
   useEffect(() => {
@@ -687,7 +733,7 @@ export default function Home() {
             <CardTitle className="text-3xl font-bold text-indigo-800">Our Pro Plans</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
                 { title: "TellerGen Text to Speech Pro", price: 499, features: ["100+ Premium and Celebrity voices", "High quality audio download", "Ultra realistic voices", "1 million characters"] },
                 { title: "TellerGen Voice Cloning Pro", price: 499, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice", "Fast processing"] },
@@ -708,7 +754,7 @@ export default function Home() {
                     onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} 
                     className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
                   >
-                    {plan.title === "TellerGen Combo Pack" ? "Buy Combo" : "Buy Pro"} (Rs {plan.price})
+                    {plan.title === "TellerGen Combo Pack" ? "Buy Combo" : plan.title === "TellerGen Talking Image Pro" ? "Free With Combo" : "Buy Pro"} {plan.title !== "TellerGen Talking Image Pro" && `(Rs ${plan.price})`}
                   </Button>
                 </div>
               ))}
