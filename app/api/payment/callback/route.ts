@@ -90,11 +90,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
       }
 
-      if (transaction.status !== 'pending') {
-        console.error(`Transaction already processed: ${transactionId}`);
-        return NextResponse.json({ error: 'Transaction already processed' }, { status: 400 });
-      }
-
       // Determine credits to add based on the base amount
       const creditsToAdd = amountCreditsMap[roundedBaseAmount];
 
@@ -103,34 +98,36 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
       }
 
-      // Update transaction status
-      transaction.status = 'completed';
-      // Add credits directly to the user's account
-      user.credits += creditsToAdd;
+      // Check if the transaction has already been processed
+      if (transaction.status === 'completed') {
+        console.log(`Transaction already processed: ${transactionId}`);
+      } else {
+        // Update transaction status
+        transaction.status = 'completed';
+        // Add credits directly to the user's account
+        user.credits += creditsToAdd;
 
-      await user.save();
+        await user.save();
 
-      console.log(`User credits updated: +${creditsToAdd} credits`);
+        console.log(`User credits updated: +${creditsToAdd} credits`);
+      }
 
-      // Derive the base URL from the incoming request
-      const url = new URL(request.url);
-      const baseUrl = `${url.protocol}//${url.host}`;
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      console.log(process.env.NEXT_PUBLIC_BASE_URL)
+      const successUrl = new URL('/payment-success', baseUrl);
+      successUrl.searchParams.set('credits', creditsToAdd.toString());
 
       // Redirect to the payment success page
-      return NextResponse.redirect(
-        `${baseUrl}/payment-success?credits=${creditsToAdd}`
-      );
+      return Response.redirect(successUrl.toString(), 303);
     } else {
       console.log('Payment failed with code:', code);
 
-      // Derive the base URL from the incoming request
-      const url = new URL(request.url);
-      const baseUrl = `${url.protocol}//${url.host}`;
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const failureUrl = new URL('/payment-failure', baseUrl);
+      failureUrl.searchParams.set('reason', code);
 
       // Redirect to the payment failure page
-      return NextResponse.redirect(
-        `${baseUrl}/payment-failure?reason=${code}`
-      );
+      return Response.redirect(failureUrl.toString(), 303);
     }
   } catch (error: any) {
     console.error('Error processing payment callback:', error);
@@ -141,13 +138,11 @@ export async function POST(request: Request) {
   }
 }
 
-// Optional: Handle GET requests if necessary
+// Update the GET function as well
 export async function GET(request: Request) {
-  // Derive the base URL from the incoming request
-  const url = new URL(request.url);
-  const baseUrl = `${url.protocol}//${url.host}`;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const failureUrl = new URL('/payment-failure', baseUrl);
+  failureUrl.searchParams.set('reason', 'invalid_request_method');
 
-  return NextResponse.redirect(
-    `${baseUrl}/payment-failure?reason=invalid_request_method`
-  );
+  return Response.redirect(failureUrl.toString(), 303);
 }
