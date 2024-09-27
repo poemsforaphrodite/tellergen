@@ -139,7 +139,7 @@ export async function POST(request: Request) {
 }
 
 // Update the GET function as well
-export async function GET(request: Request) {
+export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
   const failureUrl = new URL('/payment-failure', baseUrl);
   failureUrl.searchParams.set('reason', 'invalid_request_method');
