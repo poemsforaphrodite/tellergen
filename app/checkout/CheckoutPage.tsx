@@ -36,6 +36,8 @@ export default function CheckoutPage() {
           mappedProductName = PRODUCTS.VOICE_CLONING_PRO;
         } else if (productQueryName.toLowerCase().includes('talking_image_pro')) {
           mappedProductName = PRODUCTS.TALKING_IMAGE_PRO;
+        } else if (productQueryName.toLowerCase().includes('combo_pack')) { // Added condition for Combo Pack
+          mappedProductName = PRODUCTS.COMBO_PACK;
         } else if (productQueryName.toLowerCase().endsWith('_credits')) {
           // Handle credit-based products
           mappedProductName = productQueryName.toLowerCase();
@@ -51,11 +53,11 @@ export default function CheckoutPage() {
         setTotal(calculatedTotal);
 
         // Determine if the product is a Pro Plan or Credits
-        const isProPlan = mappedProductName.includes('_pro');
+        const isProPlan = mappedProductName.includes('_pro') || mappedProductName === PRODUCTS.COMBO_PACK; // Updated condition
         let creditsValue: number | undefined = undefined;
 
         if (isProPlan) {
-          // For Pro Plans, set credits to 0 explicitly
+          // For Pro Plans and Combo Pack, set credits to 0 explicitly
           creditsValue = 0;
         } else if (mappedProductName.endsWith('_credits')) {
           // Extract the number of credits from the product name

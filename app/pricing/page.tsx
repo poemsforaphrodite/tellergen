@@ -45,15 +45,15 @@ export default function PricingPage() {
       price: 999,
       features: [
         "Text to Speech Pro",
-        "Talking Image Pro",
         "Voice Cloning Pro",
+        "Talking Image Pro",
         "Best value for all features"
       ]
     }
   ]
 
   const handleBuyPro = (product: string, price: number) => {
-    router.push(`/checkout?product=${product.toLowerCase().replace(/\s+/g, '_')}&price=${price}`)
+    router.push(`/checkout?product=${product.toLowerCase().replace(/\s+/g, '_')}&price=${price}`);
   }
 
   return (
