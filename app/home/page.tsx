@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { BellIcon, MenuIcon, UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon, StopCircle, HomeIcon, CreditCardIcon, XIcon, CheckIcon, ShieldIcon } from "lucide-react"
+import { UploadIcon, Loader2, MicIcon, ImageIcon, UserIcon, PlayIcon, PauseIcon, DownloadIcon, StopCircle, HomeIcon, CreditCardIcon, XIcon, CheckIcon } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MenuIcon } from "lucide-react"
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -121,6 +122,15 @@ export default function Home() {
         formData.append("audio_file", audioFile)
       }
 
+      // Check if the user has enough credits
+      const creditsNeeded = text.length
+      const creditsResponse = await fetch('/api/user/credits')
+      const creditsData = await creditsResponse.json()
+      
+      if (creditsData.credits < creditsNeeded) {
+        throw new Error("Not enough credits. Please purchase more credits to continue.")
+      }
+
       const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
@@ -130,6 +140,19 @@ export default function Home() {
 
       if (response.ok && result.audioData) {
         setGeneratedAudio(result.audioData)
+        
+        // Deduct credits
+        const updateCreditsResponse = await fetch('/api/user/update-credits', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ creditsUsed: creditsNeeded }),
+        })
+        
+        if (!updateCreditsResponse.ok) {
+          console.error("Failed to update credits")
+        }
       } else {
         throw new Error(result.error || "Failed to generate audio")
       }
@@ -289,10 +312,6 @@ export default function Home() {
               </Link>
             </nav>
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <BellIcon className="h-5 w-5 text-gray-600" />
-                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
-              </Button>
               {isLoggedIn ? (
                 <Button variant="outline" onClick={handleLogout} className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">Logout</Button>
               ) : (
@@ -304,11 +323,6 @@ export default function Home() {
               <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 {isMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
               </Button>
-              <Link href="/admin">
-                <Button variant="ghost" size="icon">
-                  <ShieldIcon className="h-5 w-5 text-gray-600" />
-                </Button>
-              </Link>
             </div>
           </div>
           {isMenuOpen && (
@@ -673,11 +687,12 @@ export default function Home() {
             <CardTitle className="text-3xl font-bold text-indigo-800">Our Pro Plans</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 { title: "TellerGen Text to Speech Pro", price: 499, features: ["100+ Premium and Celebrity voices", "High quality audio download", "Ultra realistic voices", "1 million characters"] },
-                { title: "TellerGen Voice Cloning Pro", price: 999, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice", "Fast processing"] },
-                { title: "TellerGen Talking Image Pro", price: 799, features: ["Up to 1000 minutes of video generation", "High quality image to video", "Realistic head movement", "Perfect lip syncing"] }
+                { title: "TellerGen Voice Cloning Pro", price: 499, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice", "Fast processing"] },
+                { title: "TellerGen Talking Image Pro", price: 799, features: ["Up to 1000 minutes of video generation", "High quality image to video", "Realistic head movement", "Perfect lip syncing"] },
+                { title: "TellerGen Combo Pack", price: 999, features: ["Text to Speech Pro", "Talking Image Pro", "Voice Cloning Pro", "Best value for all features"] }
               ].map((plan, index) => (
                 <div key={index} className="bg-indigo-50 p-6 rounded-lg shadow-md space-y-4">
                   <h3 className="text-xl font-semibold text-indigo-800">{plan.title}</h3>
@@ -689,8 +704,11 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4">
-                    Buy Pro (rs {plan.price})
+                  <Button 
+                    onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} 
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
+                  >
+                    {plan.title === "TellerGen Combo Pack" ? "Buy Combo" : "Buy Pro"} (Rs {plan.price})
                   </Button>
                 </div>
               ))}

@@ -22,7 +22,7 @@ export default function PricingPage() {
     },
     {
       title: "TellerGen Voice Cloning Pro",
-      price: 999,
+      price: 499,
       features: [
         "Clone up to 1 million characters",
         "High quality audio",
@@ -39,6 +39,16 @@ export default function PricingPage() {
         "Realistic head movement",
         "Perfect lip syncing"
       ]
+    },
+    {
+      title: "TellerGen Combo Pack",
+      price: 999,
+      features: [
+        "Text to Speech Pro",
+        "Talking Image Pro",
+        "Voice Cloning Pro",
+        "Best value for all features"
+      ]
     }
   ]
 
@@ -53,11 +63,11 @@ export default function PricingPage() {
           <CardTitle className="text-3xl font-bold text-indigo-800 text-center">Our Pro Plans</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {plans.map((plan, index) => (
               <div key={index} className="bg-white p-6 rounded-lg shadow-md space-y-4 border border-indigo-100 hover:border-indigo-300 transition-all duration-300">
                 <h3 className="text-xl font-semibold text-indigo-800">{plan.title}</h3>
-                <p className="text-3xl font-bold text-indigo-600">Rs{plan.price}</p>
+                <p className="text-3xl font-bold text-indigo-600">Rs {plan.price}</p>
                 <ul className="space-y-2">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-center text-gray-700">
@@ -70,7 +80,7 @@ export default function PricingPage() {
                   onClick={() => handleBuyPro(plan.title, plan.price)} 
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
                 >
-                  Buy Pro
+                  {plan.title === "TellerGen Combo Pack" ? "Buy Combo" : "Buy Pro"}
                 </Button>
               </div>
             ))}

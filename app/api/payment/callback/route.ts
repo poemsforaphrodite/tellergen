@@ -4,11 +4,10 @@ import dbConnect from '@/lib/mongodb';
 
 // Define a mapping of base payment amounts (in rupees) to credits
 const amountCreditsMap: { [key: number]: number } = {
-  99: 50000,
-  249: 200000,
-  499: 500000,
-  799: 1000000,
-  1299: 2000000,
+  10: 1000,
+  30: 4000,
+  50: 7000,
+  100: 12000,
 };
 
 export async function POST(request: Request) {

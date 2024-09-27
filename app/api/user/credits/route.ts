@@ -17,7 +17,14 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-    return NextResponse.json({ credits: user.credits })
+    return NextResponse.json({
+      credits: {
+        common: user.credits || 0,
+        'Text to speech Pro': 0,
+        'Voice cloning Pro': 0,
+        'Talking Image': 0
+      }
+    })
   } catch (error) {
     console.error('Error fetching user credits:', error)
     return NextResponse.json({ error: 'Failed to fetch credits' }, { status: 500 })

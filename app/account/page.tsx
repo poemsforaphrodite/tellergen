@@ -12,14 +12,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
 interface User {
+  _id: string;
   username: string;
   email: string;
-  credits?: number;
-  subscriptions?: {
-    tts_pro: boolean;
-    talking_image_pro: boolean;
-    clone_voice_pro: boolean;
-  };
+  credits: number;
+  transactions: Array<{
+    transactionId: string;
+    merchantId: string;
+    amount: number;
+    status: string;
+    _id: string;
+  }>;
 }
 
 export default function AccountPage() {
@@ -41,6 +44,7 @@ export default function AccountPage() {
       const response = await fetch('/api/auth/current')
       const data = await response.json()
       if (response.ok) {
+        console.log('User data:', data) // Log the entire user data
         setUser(data.user)
       } else {
         setError(data.message || 'Failed to fetch user data')
@@ -100,36 +104,33 @@ export default function AccountPage() {
               <div className="flex items-center space-x-6 bg-indigo-50 p-6 rounded-lg">
                 <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
                   <AvatarFallback className="text-3xl bg-indigo-200 text-indigo-800">
-                    {user.username.charAt(0).toUpperCase()}
+                    {user.email.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="text-3xl font-bold text-indigo-800">{user.username}</h2>
-                  <p className="text-indigo-600">{user.email}</p>
+                  <h2 className="text-3xl font-bold text-indigo-800">{user.email}</h2>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-xl font-semibold text-indigo-800 mb-4">Credits</h3>
-                  <p className="text-3xl font-bold text-indigo-600">
-                    {user.credits !== undefined ? user.credits.toLocaleString() : 'N/A'}
-                  </p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-xl font-semibold text-indigo-800 mb-4">Subscriptions</h3>
-                  <ul className="space-y-2">
-                    {Object.entries(user.subscriptions || {}).map(([key, value]) => (
-                      <li key={key} className="flex items-center">
-                        <div className={`w-3 h-3 rounded-full mr-2 ${value ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        <span className="capitalize">{key.replace(/_/g, ' ')}: </span>
-                        <span className={`ml-2 font-semibold ${value ? 'text-green-600' : 'text-red-600'}`}>
-                          {value ? 'Active' : 'Inactive'}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-semibold text-indigo-800 mb-4">Your Current Balance</h3>
+                <ul className="space-y-2">
+                  <li className="text-2xl font-bold text-indigo-600 mb-4">
+                    {user.credits.toLocaleString()} Common Credits
+                  </li>
+                  <li>
+                    <span className="font-medium">0 Credits</span>
+                    <span className="ml-2">- Text To Speech Pro</span>
+                  </li>
+                  <li>
+                    <span className="font-medium">0 Credits</span>
+                    <span className="ml-2">- Voice Cloning Pro</span>
+                  </li>
+                  <li>
+                    <span className="font-medium">0 Credits</span>
+                    <span className="ml-2">- Talking Image</span>
+                  </li>
+                </ul>
               </div>
 
               <form onSubmit={handlePasswordChange} className="bg-white p-6 rounded-lg shadow-md">

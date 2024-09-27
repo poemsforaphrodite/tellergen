@@ -1,17 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from 'next/navigation'  // Add this import
+import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import { HomeIcon, CreditCardIcon, UserIcon } from "lucide-react"
 
+type CreditBalance = {
+  common: number;
+  'Text to speech Pro': number;
+  'Voice cloning Pro': number;
+  'Talking Image': number;
+};
+
 export default function CreditPage() {
-  const [credits, setCredits] = useState(0)
+  const [creditBalance, setCreditBalance] = useState<CreditBalance>({
+    common: 0,
+    'Text to speech Pro': 0,
+    'Voice cloning Pro': 0,
+    'Talking Image': 0
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()  // Add this line
+  const router = useRouter()
 
   useEffect(() => {
     fetchCredits()
@@ -22,7 +34,7 @@ export default function CreditPage() {
       const response = await fetch('/api/user/credits')
       const data = await response.json()
       if (response.ok) {
-        setCredits(data.credits)
+        setCreditBalance(data.credits)
       } else {
         setError(data.message || 'Failed to fetch credits')
       }
@@ -33,16 +45,20 @@ export default function CreditPage() {
     }
   }
 
-  const creditOptions = [
-    { credits: 50000, price: 99 },
-    { credits: 200000, price: 249 },
-    { credits: 500000, price: 499 },
-    { credits: 1000000, price: 799 },
-    { credits: 2000000, price: 1299 },
+  const creditValue = [
+    { service: "Text to speech", value: "1 character = 1 Credit" },
+    { service: "Voice Cloning", value: "1 character = 1 Credit" },
+    { service: "Talking Image", value: "10 second = 1 Credit" }
   ]
 
-  const handlePurchase = async (credits: number, price: number) => {
-    // Instead of making a purchase directly, redirect to the checkout page
+  const purchaseOptions = [
+    { credits: 1000, price: 10 },
+    { credits: 4000, price: 30 },
+    { credits: 7000, price: 50 },
+    { credits: 12000, price: 100 }
+  ]
+
+  const handlePurchase = (credits: number, price: number) => {
     router.push(`/checkout?product=${credits}_credits&price=${price}`)
   }
 
@@ -52,28 +68,46 @@ export default function CreditPage() {
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-indigo-800">Credit</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-8">
           {loading ? (
             <p className="text-center text-gray-600">Loading...</p>
           ) : error ? (
             <p className="text-center text-red-500">{error}</p>
           ) : (
             <>
-              <div className="mb-8 p-6 bg-indigo-50 rounded-lg shadow-inner">
-                <h3 className="text-xl font-semibold text-indigo-800 mb-2">Your Current Balance</h3>
-                <p className="text-4xl font-bold text-indigo-600">{credits.toLocaleString()} Credits</p>
+              <div className="bg-indigo-50 rounded-lg p-6 shadow-inner">
+                <h3 className="text-xl font-semibold text-indigo-800 mb-4">Your Current Balance</h3>
+                <p className="text-2xl font-bold text-indigo-600 mb-4">
+                  {creditBalance.common.toLocaleString()} Common Credits
+                </p>
+                {Object.entries(creditBalance).map(([service, credits]) => (
+                  service !== 'common' && (
+                    <p key={service} className="text-lg">
+                      <span className="font-medium">{credits.toLocaleString()} Credits</span> - {service}
+                    </p>
+                  )
+                ))}
               </div>
-              <div className="space-y-6">
-                <h3 className="text-2xl font-semibold text-indigo-800">Purchase Credits:</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {creditOptions.map(({ credits, price }) => (
+
+              <div className="bg-indigo-50 rounded-lg p-6 shadow-inner">
+                <h3 className="text-xl font-semibold text-indigo-800 mb-4">Credit Value</h3>
+                {creditValue.map(({ service, value }) => (
+                  <p key={service} className="text-lg">
+                    <span className="font-medium">{service}</span> - {value}
+                  </p>
+                ))}
+              </div>
+
+              <div>
+                <h3 className="text-2xl font-semibold text-indigo-800 mb-4">Purchase Credits:</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {purchaseOptions.map(({ credits, price }) => (
                     <Button 
                       key={credits} 
                       onClick={() => handlePurchase(credits, price)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-lg py-6"
                     >
-                      Buy {credits.toLocaleString()} Credits
-                      <span className="block text-sm mt-1">Rs{price}</span>
+                      Buy {credits.toLocaleString()} Credits - Rs {price}
                     </Button>
                   ))}
                 </div>
