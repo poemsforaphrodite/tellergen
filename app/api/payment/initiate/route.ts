@@ -49,6 +49,7 @@ export async function POST(request: Request) {
     mobileNumber,
     paymentInstrument,
     credits,
+    productName, // Add this line to get the product name
   } = decodedPayload;
 
   // Ensure all required fields are present
@@ -109,11 +110,12 @@ export async function POST(request: Request) {
     await User.findByIdAndUpdate(userId, {
       $push: {
         transactions: {
-          transactionId: merchantTransactionId, // Ensure consistent naming
+          transactionId: merchantTransactionId,
           merchantId: merchantId,
-          amount: amount / 100, // Convert paise to rupees
+          amount: amount / 100,
           status: 'pending',
-          credits: credits || 0, // 추가된 부분: 크레딧 수량 저장
+          credits: credits || 0,
+          productName: productName, // Add this line to save the product name
         },
       },
     });

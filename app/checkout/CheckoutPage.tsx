@@ -27,13 +27,19 @@ export default function CheckoutPage() {
       let productCredits = searchParams.get('credits');
 
       if (productName && productPrice) {
-        const subtotal = parseInt(productPrice, 10) || 0;
-        const calculatedGst = subtotal * 0.18;
-        const calculatedTotal = subtotal + calculatedGst;
+        const subtotal = parseFloat(productPrice) || 0;
+        const calculatedGst = parseFloat((subtotal * 0.18).toFixed(2));
+        const calculatedTotal = parseFloat((subtotal + calculatedGst).toFixed(2));
         setTotal(calculatedTotal);
 
-        // If credits are not provided in query params, extract from productName
-        if (!productCredits) {
+        // Check if the product is a Pro Plan (Text-to-Speech or Voice Cloning)
+        const isProPlan = productName.toLowerCase().includes('pro');
+
+        if (isProPlan) {
+          // For Pro Plans, set credits to 0 explicitly
+          productCredits = '0';
+        } else if (!productCredits) {
+          // If credits are not provided in query params, extract from productName
           const creditsMatch = productName.match(/^(\d+)_credits$/);
           if (creditsMatch && creditsMatch[1]) {
             productCredits = creditsMatch[1];
@@ -45,7 +51,7 @@ export default function CheckoutPage() {
         setProduct({
           name: productName,
           price: subtotal,
-          credits: Number.isFinite(parsedCredits) ? parsedCredits : undefined,
+          credits: isProPlan ? 0 : (Number.isFinite(parsedCredits) ? parsedCredits : undefined),
         });
       } else {
         setError('Invalid product selection');
@@ -162,20 +168,22 @@ export default function CheckoutPage() {
             <div className="border border-gray-300 p-4 rounded-lg bg-white shadow-sm">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-700">Product:</span>
-                <span className="font-medium">
-                  {Number.isFinite(product.credits)
-                    ? `${product.credits?.toLocaleString() ?? 0}_credits`
-                    : product.name}
-                </span>
+                <span className="font-medium">{product.name}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-700">Price:</span>
                 <span className="font-medium">₹{product.price.toFixed(2)}</span>
               </div>
-              {Number.isFinite(product.credits) && (
+              {product.credits !== undefined && product.credits !== 0 && (
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-700">Credits:</span>
-                  <span className="font-medium">{product.credits ? product.credits.toLocaleString() : 0}</span>
+                  <span className="font-medium">{product.credits?.toLocaleString() ?? 0}</span>
+                </div>
+              )}
+              {product.credits === 0 && (
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-700">Features:</span>
+                  <span className="font-medium">Unlimited Usage</span>
                 </div>
               )}
               <div className="flex justify-between mb-2">

@@ -5,7 +5,8 @@ interface Transaction {
   merchantId: string;
   amount: number;
   status: string;
-  // Remove the credits field from here
+  credits?: number; // Added optional credits field
+  productName?: string;
 }
 
 export interface UserDocument extends Document {
@@ -13,6 +14,9 @@ export interface UserDocument extends Document {
   email: string;
   password: string;
   credits: number;
+  textToSpeechCharacters: number;
+  voiceCloningCharacters: number;
+  talkingImageMinutes: number;
   subscriptions: {
     [key: string]: boolean;
   };
@@ -24,7 +28,8 @@ const TransactionSchema: Schema = new Schema({
   merchantId: { type: String, required: true },
   amount: { type: Number, required: true },
   status: { type: String, required: true },
-  // Remove the credits field from here
+  credits: { type: Number, default: 0 }, // Added credits field
+  productName: { type: String },
 });
 
 const UserSchema: Schema = new Schema({
@@ -32,6 +37,9 @@ const UserSchema: Schema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   credits: { type: Number, default: 0 },
+  textToSpeechCharacters: { type: Number, default: 0 },
+  voiceCloningCharacters: { type: Number, default: 0 },
+  talkingImageMinutes: { type: Number, default: 0 },
   subscriptions: {
     type: Map,
     of: Boolean,

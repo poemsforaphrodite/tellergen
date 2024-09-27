@@ -8,6 +8,7 @@ const amountCreditsMap: { [key: number]: number } = {
   30: 4000,
   50: 7000,
   100: 12000,
+  // Removed 499 from credits mapping
 };
 
 export async function POST(request: Request) {
@@ -70,12 +71,14 @@ export async function POST(request: Request) {
   const roundedBaseAmount = Math.round(baseAmountInRupees);
   console.log(`Base amount (excluding GST): Rs${roundedBaseAmount}`);
 
+  // Initialize creditsToAdd
+  let creditsToAdd: number | undefined;
+
   // Process the payment response
   try {
     if (code === 'PAYMENT_SUCCESS') {
       console.log('Payment successful');
 
-      // Find the user based on transactionId
       const user = await User.findOne({ 'transactions.transactionId': transactionId });
 
       if (!user) {
@@ -89,35 +92,79 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
       }
 
-      // Determine credits to add based on the base amount
-      const creditsToAdd = amountCreditsMap[roundedBaseAmount];
+      // Determine action based on the rounded base amount and product name
+      if (roundedBaseAmount === 499) {
+        const charactersToAdd = 1000000;
 
-      if (!creditsToAdd) {
-        console.error(`Invalid payment amount received: Rs${totalAmountInRupees}`);
-        return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
-      }
+        if (transaction.status === 'completed') {
+          console.log(`Transaction already processed: ${transactionId}`);
+        } else {
+          transaction.status = 'completed';
+          
+          // Check the product name to determine which feature to update
+          const productName = transaction.productName || '';
+          console.log(`Processing pro product: ${productName}`);
 
-      // Check if the transaction has already been processed
-      if (transaction.status === 'completed') {
-        console.log(`Transaction already processed: ${transactionId}`);
+          if (productName.toLowerCase().includes('text_to_speech_pro')) {
+            user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
+            console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
+          } else if (productName.toLowerCase().includes('voice_cloning_pro')) {
+            user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
+            console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
+          } else if (productName.toLowerCase().includes('talking_image_pro')) {
+            user.talkingImageMinutes = (user.talkingImageMinutes || 0) + 100; // Assuming 100 minutes for Talking Image Pro
+            console.log(`User Talking Image minutes updated: +100 minutes`);
+          } else {
+            console.warn(`Unrecognized pro product: ${productName}. Defaulting to Text-to-Speech Pro.`);
+            user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
+            console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
+          }
+
+          await user.save();
+        }
       } else {
-        // Update transaction status
-        transaction.status = 'completed';
-        // Add credits directly to the user's account
-        user.credits += creditsToAdd;
+        // Handle standard credits addition (unchanged)
+        creditsToAdd = amountCreditsMap[roundedBaseAmount];
 
-        await user.save();
+        if (!creditsToAdd) {
+          console.error(`Invalid payment amount received: Rs${totalAmountInRupees}`);
+          return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
+        }
 
-        console.log(`User credits updated: +${creditsToAdd} credits`);
+        // Check if the transaction has already been processed
+        if (transaction.status === 'completed') {
+          console.log(`Transaction already processed: ${transactionId}`);
+        } else {
+          // Update transaction status
+          transaction.status = 'completed';
+          // Add credits directly to the user's account
+          user.credits += creditsToAdd;
+
+          await user.save();
+
+          console.log(`User credits updated: +${creditsToAdd} credits`);
+        }
       }
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      console.log(process.env.NEXT_PUBLIC_BASE_URL)
-      const successUrl = new URL('/payment-success', baseUrl);
-      successUrl.searchParams.set('credits', creditsToAdd.toString());
+      const creditUrl = new URL('/credit', baseUrl);
+      creditUrl.searchParams.set('paymentSuccess', 'true');
 
-      // Redirect to the payment success page
-      return Response.redirect(successUrl.toString(), 303);
+      if (roundedBaseAmount === 499) {
+        creditUrl.searchParams.set('characters', '1000000');
+        creditUrl.searchParams.set('product', transaction.productName);
+      } else {
+        if (creditsToAdd === undefined) {
+          console.error('creditsToAdd is undefined');
+          return NextResponse.json(
+            { error: 'Failed to determine credits to add' },
+            { status: 500 }
+          );
+        }
+        creditUrl.searchParams.set('credits', creditsToAdd.toString());
+      }
+
+      return Response.redirect(creditUrl.toString(), 303);
     } else {
       console.log('Payment failed with code:', code);
 
@@ -137,7 +184,6 @@ export async function POST(request: Request) {
   }
 }
 
-// Update the GET function as well
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
   const failureUrl = new URL('/payment-failure', baseUrl);

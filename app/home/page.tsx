@@ -236,7 +236,12 @@ export default function Home() {
   }
 
   const handleBuyPro = (product: string, price: number) => {
-    router.push(`/checkout?product=${product}&price=${price}`)
+    let queryParams = `product=${encodeURIComponent(product)}&price=${price}`;
+    
+    // No need to add credits parameter for Voice Cloning Pro
+    // as it will be handled the same as Text-to-Speech Pro
+    
+    router.push(`/checkout?${queryParams}`);
   }
 
   const handleImageUpload = () => {
@@ -735,8 +740,8 @@ export default function Home() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
-                { title: "TellerGen Text to Speech Pro", price: 499, features: ["100+ Premium and Celebrity voices", "High quality audio download", "Ultra realistic voices", "1 million characters"] },
-                { title: "TellerGen Voice Cloning Pro", price: 499, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice", "Fast processing"] },
+                { title: "TellerGen Text to Speech Pro", price: 499, features: ["100+ Premium and Celebrity voices", "High quality audio download", "Ultra realistic voices", "Unlimited characters"] },
+                { title: "TellerGen Voice Cloning Pro", price: 499, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice", "Unlimited characters"] },
                 { title: "TellerGen Talking Image Pro", price: 799, features: ["Up to 1000 minutes of video generation", "High quality image to video", "Realistic head movement", "Perfect lip syncing"] },
                 { title: "TellerGen Combo Pack", price: 999, features: ["Text to Speech Pro", "Talking Image Pro", "Voice Cloning Pro", "Best value for all features"] }
               ].map((plan, index) => (

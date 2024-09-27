@@ -13,14 +13,14 @@ export async function GET() {
   }
 
   try {
-    const user = await User.findById(userId).select('credits')
+    const user = await User.findById(userId).select('credits textToSpeechCharacters')
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
     return NextResponse.json({
       credits: {
         common: user.credits || 0,
-        'Text to speech Pro': 0,
+        'Text to speech Pro': user.textToSpeechCharacters || 0,
         'Voice cloning Pro': 0,
         'Talking Image': 0
       }
