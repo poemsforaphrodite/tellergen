@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import User from '@/models/User';
 import dbConnect from '@/lib/mongodb';
+import { PRODUCTS } from '@/constants/products'; // Importing product constants
 
 // Define a mapping of base payment amounts (in rupees) to credits
 const amountCreditsMap: { [key: number]: number } = {
@@ -100,33 +101,33 @@ export async function POST(request: Request) {
           console.log(`Transaction already processed: ${transactionId}`);
         } else {
           transaction.status = 'completed';
-          
+
           // Check the product name to determine which feature to update
           const productName = transaction.productName || '';
-          console.log(`Processing pro product: ${productName}`);
+          console.log(`Processing product: ${productName}`);
 
-          if (productName.toLowerCase().includes('text_to_speech_pro')) {
+          if (productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
             user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
             console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
-          } else if (productName.toLowerCase().includes('voice_cloning_pro')) {
+          } else if (productName === PRODUCTS.VOICE_CLONING_PRO) {
             user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
             console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
-          } else if (productName.toLowerCase().includes('talking_image_pro')) {
+          } else if (productName === PRODUCTS.TALKING_IMAGE_PRO) {
             user.talkingImageMinutes = (user.talkingImageMinutes || 0) + 100; // Assuming 100 minutes for Talking Image Pro
             console.log(`User Talking Image minutes updated: +100 minutes`);
           } else {
-            console.warn(`Unrecognized pro product: ${productName}. Defaulting to Text-to-Speech Pro.`);
+            console.warn(`Unrecognized product: ${productName}. Defaulting to Text-to-Speech Pro.`);
             user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
             console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
           }
 
           await user.save();
         }
-      } else {
-        // Handle standard credits addition (unchanged)
-        creditsToAdd = amountCreditsMap[roundedBaseAmount];
-
-        if (!creditsToAdd) {
+      } else if (roundedBaseAmount > 0) {
+        // Handle credit-based and standard credits addition
+        if (roundedBaseAmount in amountCreditsMap) {
+          creditsToAdd = amountCreditsMap[roundedBaseAmount];
+        } else {
           console.error(`Invalid payment amount received: Rs${totalAmountInRupees}`);
           return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
         }
@@ -137,13 +138,51 @@ export async function POST(request: Request) {
         } else {
           // Update transaction status
           transaction.status = 'completed';
-          // Add credits directly to the user's account
-          user.credits += creditsToAdd;
+
+          // Determine if the purchase is for credits or a Pro plan
+          const isProPlan = transaction.productName ? transaction.productName.includes('_pro') : false;
+
+          if (isProPlan) {
+            // This block might be redundant if Pro plans always have roundedBaseAmount === 499
+            // Included here for completeness
+            const charactersToAdd = 1000000;
+            if (transaction.productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
+              user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
+              console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
+            } else if (transaction.productName === PRODUCTS.VOICE_CLONING_PRO) {
+              user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
+              console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
+            } else if (transaction.productName === PRODUCTS.TALKING_IMAGE_PRO) {
+              user.talkingImageMinutes = (user.talkingImageMinutes || 0) + 100; // Assuming 100 minutes for Talking Image Pro
+              console.log(`User Talking Image minutes updated: +100 minutes`);
+            } else {
+              console.warn(`Unrecognized product: ${transaction.productName}. Defaulting to Text-to-Speech Pro.`);
+              user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
+              console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
+            }
+          } else if (transaction.productName && transaction.productName.endsWith('_credits')) {
+            // Handle credit-based purchases
+            const creditsMatch = transaction.productName.match(/^(\d+)_credits$/);
+            if (creditsMatch && creditsMatch[1]) {
+              const creditsToAddFromProduct = parseInt(creditsMatch[1], 10);
+              user.credits += creditsToAddFromProduct;
+              console.log(`User credits updated: +${creditsToAddFromProduct} credits`);
+            } else {
+              // Fallback to amountCreditsMap if productName doesn't match expected pattern
+              user.credits += creditsToAdd;
+              console.log(`User credits updated: +${creditsToAdd} credits`);
+            }
+          } else {
+            // For standard credit additions
+            user.credits += creditsToAdd;
+            console.log(`User credits updated: +${creditsToAdd} credits`);
+          }
 
           await user.save();
-
-          console.log(`User credits updated: +${creditsToAdd} credits`);
         }
+      } else {
+        console.error(`Unhandled payment amount: Rs${roundedBaseAmount}`);
+        return NextResponse.json({ error: 'Unhandled payment amount' }, { status: 400 });
       }
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -153,14 +192,7 @@ export async function POST(request: Request) {
       if (roundedBaseAmount === 499) {
         creditUrl.searchParams.set('characters', '1000000');
         creditUrl.searchParams.set('product', transaction.productName);
-      } else {
-        if (creditsToAdd === undefined) {
-          console.error('creditsToAdd is undefined');
-          return NextResponse.json(
-            { error: 'Failed to determine credits to add' },
-            { status: 500 }
-          );
-        }
+      } else if (creditsToAdd !== undefined) {
         creditUrl.searchParams.set('credits', creditsToAdd.toString());
       }
 

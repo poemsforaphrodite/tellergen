@@ -13,17 +13,23 @@ export async function GET() {
   }
 
   try {
-    const user = await User.findById(userId).select('credits textToSpeechCharacters')
+    // Select all necessary fields
+    const user = await User.findById(userId).select(
+      'credits textToSpeechCharacters voiceCloningCharacters talkingImageMinutes'
+    )
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
+
     return NextResponse.json({
       credits: {
         common: user.credits || 0,
-        'Text to speech Pro': user.textToSpeechCharacters || 0,
-        'Voice cloning Pro': 0,
-        'Talking Image': 0
-      }
+        'Text to Speech Pro': user.textToSpeechCharacters || 0,
+        'Voice Cloning Pro': user.voiceCloningCharacters || 0,
+        'Talking Image': user.talkingImageMinutes
+          ? Math.floor(user.talkingImageMinutes * 6) // 1 minute = 6 credits
+          : 0,
+      },
     })
   } catch (error) {
     console.error('Error fetching user credits:', error)

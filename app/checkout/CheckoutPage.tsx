@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PRODUCTS } from '@/constants/products'; // Importing product constants
 
 export default function CheckoutPage() {
   const [product, setProduct] = useState<{ name: string; price: number; credits?: number } | null>(null);
@@ -22,36 +23,56 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (searchParams) {
-      const productName = searchParams.get('product');
+      const productQueryName = searchParams.get('product');
       const productPrice = searchParams.get('price');
-      let productCredits = searchParams.get('credits');
 
-      if (productName && productPrice) {
+      if (productQueryName && productPrice) {
+        // Map the query parameter to the defined constants
+        let mappedProductName = '';
+
+        if (productQueryName.toLowerCase().includes('text_to_speech_pro')) {
+          mappedProductName = PRODUCTS.TEXT_TO_SPEECH_PRO;
+        } else if (productQueryName.toLowerCase().includes('voice_cloning_pro')) {
+          mappedProductName = PRODUCTS.VOICE_CLONING_PRO;
+        } else if (productQueryName.toLowerCase().includes('talking_image_pro')) {
+          mappedProductName = PRODUCTS.TALKING_IMAGE_PRO;
+        } else if (productQueryName.toLowerCase().endsWith('_credits')) {
+          // Handle credit-based products
+          mappedProductName = productQueryName.toLowerCase();
+        } else {
+          setError('Invalid product selection');
+          setLoading(false);
+          return;
+        }
+
         const subtotal = parseFloat(productPrice) || 0;
         const calculatedGst = parseFloat((subtotal * 0.18).toFixed(2));
         const calculatedTotal = parseFloat((subtotal + calculatedGst).toFixed(2));
         setTotal(calculatedTotal);
 
-        // Check if the product is a Pro Plan (Text-to-Speech or Voice Cloning)
-        const isProPlan = productName.toLowerCase().includes('pro');
+        // Determine if the product is a Pro Plan or Credits
+        const isProPlan = mappedProductName.includes('_pro');
+        let creditsValue: number | undefined = undefined;
 
         if (isProPlan) {
           // For Pro Plans, set credits to 0 explicitly
-          productCredits = '0';
-        } else if (!productCredits) {
-          // If credits are not provided in query params, extract from productName
-          const creditsMatch = productName.match(/^(\d+)_credits$/);
+          creditsValue = 0;
+        } else if (mappedProductName.endsWith('_credits')) {
+          // Extract the number of credits from the product name
+          const creditsMatch = mappedProductName.match(/^(\d+)_credits$/);
           if (creditsMatch && creditsMatch[1]) {
-            productCredits = creditsMatch[1];
+            creditsValue = parseInt(creditsMatch[1], 10);
+          } else {
+            setError('Invalid credits product');
+            setLoading(false);
+            return;
           }
         }
 
-        const parsedCredits = productCredits ? Number(productCredits) : undefined;
-
         setProduct({
-          name: productName,
+          name: mappedProductName,
           price: subtotal,
-          credits: isProPlan ? 0 : (Number.isFinite(parsedCredits) ? parsedCredits : undefined),
+          credits: creditsValue,
         });
       } else {
         setError('Invalid product selection');
@@ -70,19 +91,20 @@ export default function CheckoutPage() {
 
       const creditsValue = product?.credits ?? 0;
 
-      const payload = {
+      const payload: any = {
         merchantId: process.env.NEXT_PUBLIC_PHONEPE_MERCHANT_ID,
         merchantTransactionId: merchantTransactionId,
         merchantUserId: "MUID" + Date.now(),
         amount: Math.round(total * 100), // Convert to paise and ensure it's an integer
         redirectUrl: `${window.location.origin}/api/payment/callback`,
-        redirectMode: "REDIRECT",
+        redirectMode: "POST", // Changed to 'POST' to match backend
         callbackUrl: `${window.location.origin}/api/payment/callback`,
         mobileNumber: phone.replace(/\s+/g, ''), // Remove spaces from phone number
         paymentInstrument: {
           type: "PAY_PAGE",
         },
-        credits: creditsValue, // Ensure credits are included
+        credits: creditsValue,
+        productName: product?.name, // Ensuring correct product name is sent
       };
 
       console.log('Payload:', payload);
@@ -168,7 +190,9 @@ export default function CheckoutPage() {
             <div className="border border-gray-300 p-4 rounded-lg bg-white shadow-sm">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-700">Product:</span>
-                <span className="font-medium">{product.name}</span>
+                <span className="font-medium">
+                  {product.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </span>
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-700">Price:</span>
@@ -177,7 +201,7 @@ export default function CheckoutPage() {
               {product.credits !== undefined && product.credits !== 0 && (
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-700">Credits:</span>
-                  <span className="font-medium">{product.credits?.toLocaleString() ?? 0}</span>
+                  <span className="font-medium">{product.credits.toLocaleString()}</span>
                 </div>
               )}
               {product.credits === 0 && (

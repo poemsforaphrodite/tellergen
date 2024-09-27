@@ -236,7 +236,7 @@ export default function Home() {
   }
 
   const handleBuyPro = (product: string, price: number) => {
-    let queryParams = `product=${encodeURIComponent(product)}&price=${price}`;
+    const queryParams = `product=${encodeURIComponent(product)}&price=${price}`;
     
     // No need to add credits parameter for Voice Cloning Pro
     // as it will be handled the same as Text-to-Speech Pro

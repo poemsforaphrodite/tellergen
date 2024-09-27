@@ -9,16 +9,16 @@ import { HomeIcon, CreditCardIcon, UserIcon } from "lucide-react"
 
 type CreditBalance = {
   common: number;
-  'Text to speech Pro': number;
-  'Voice cloning Pro': number;
+  'Text to Speech Pro': number;
+  'Voice Cloning Pro': number;
   'Talking Image': number;
 };
 
 export default function CreditPage() {
   const [creditBalance, setCreditBalance] = useState<CreditBalance>({
     common: 0,
-    'Text to speech Pro': 0,
-    'Voice cloning Pro': 0,
+    'Text to Speech Pro': 0,
+    'Voice Cloning Pro': 0,
     'Talking Image': 0
   })
   const [loading, setLoading] = useState(true)
@@ -34,9 +34,14 @@ export default function CreditPage() {
       const response = await fetch('/api/user/credits')
       const data = await response.json()
       if (response.ok) {
-        setCreditBalance(data.credits)
+        setCreditBalance({
+          common: data.credits.common,
+          'Text to Speech Pro': data.credits['Text to Speech Pro'],
+          'Voice Cloning Pro': data.credits['Voice Cloning Pro'],
+          'Talking Image': data.credits['Talking Image']
+        })
       } else {
-        setError(data.message || 'Failed to fetch credits')
+        setError(data.error || 'Failed to fetch credits')
       }
     } catch (err) {
       setError('An error occurred while fetching credits')
@@ -46,9 +51,9 @@ export default function CreditPage() {
   }
 
   const creditValue = [
-    { service: "Text to speech", value: "1 character = 1 Credit" },
-    { service: "Voice Cloning", value: "1 character = 1 Credit" },
-    { service: "Talking Image", value: "10 second = 1 Credit" }
+    { service: "Text to Speech Pro", value: "1 character = 1 Credit" },
+    { service: "Voice Cloning Pro", value: "1 character = 1 Credit" },
+    { service: "Talking Image", value: "10 seconds = 1 Credit" }
   ]
 
   const purchaseOptions = [
