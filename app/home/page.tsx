@@ -472,10 +472,15 @@ export default function Home() {
                 <TabsTrigger 
                   value="Clone voice" 
                   className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all"
-                  disabled={!isLoggedIn}
+                  onClick={(e) => {
+                    if (!isLoggedIn) {
+                      e.preventDefault();
+                      setError("Please log in to access the Clone voice feature.");
+                    }
+                  }}
                 >
                   <UserIcon className="w-4 h-4 mr-2" />
-                  Clone voice {!isLoggedIn && '(Pro)'}
+                  Clone voice
                 </TabsTrigger>
               </TabsList>
               

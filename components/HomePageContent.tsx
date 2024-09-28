@@ -13,7 +13,6 @@ export default function HomePageContent() {
       if (!data.isLoggedIn) {
         router.push('/login'); // Redirect to login if not logged in
       }
-      // Remove the else block that was setting isLoggedIn
     } catch (error) {
       console.error("Error checking login status:", error);
     }
