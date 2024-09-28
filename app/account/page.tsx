@@ -15,7 +15,11 @@ interface User {
   _id: string;
   username: string;
   email: string;
-  credits: number;
+  subscriptions: Array<{
+    name: string;
+    status: string;
+    expiryDate: string;
+  }>;
   transactions: Array<{
     transactionId: string;
     merchantId: string;
@@ -25,8 +29,21 @@ interface User {
   }>;
 }
 
+type CreditBalance = {
+  common: number;
+  'Text to Speech Pro': number;
+  'Voice Cloning Pro': number;
+  'Talking Image': number;
+};
+
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null)
+  const [creditBalance, setCreditBalance] = useState<CreditBalance>({
+    common: 0,
+    'Text to Speech Pro': 0,
+    'Voice Cloning Pro': 0,
+    'Talking Image': 0
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentPassword, setCurrentPassword] = useState("")
@@ -37,6 +54,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     fetchUserData()
+    fetchCredits()
   }, [])
 
   const fetchUserData = async () => {
@@ -44,13 +62,33 @@ export default function AccountPage() {
       const response = await fetch('/api/auth/current')
       const data = await response.json()
       if (response.ok) {
-        console.log('User data:', data) // Log the entire user data
         setUser(data.user)
       } else {
         setError(data.message || 'Failed to fetch user data')
       }
     } catch (err) {
       setError('An error occurred while fetching user data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchCredits = async () => {
+    try {
+      const response = await fetch('/api/user/credits')
+      const data = await response.json()
+      if (response.ok) {
+        setCreditBalance({
+          common: data.credits.common,
+          'Text to Speech Pro': data.credits['Text to Speech Pro'],
+          'Voice Cloning Pro': data.credits['Voice Cloning Pro'],
+          'Talking Image': data.credits['Talking Image']
+        })
+      } else {
+        setError(data.error || 'Failed to fetch credits')
+      }
+    } catch (err) {
+      setError('An error occurred while fetching credits')
     } finally {
       setLoading(false)
     }
@@ -112,25 +150,18 @@ export default function AccountPage() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-indigo-50 rounded-lg p-6 shadow-inner">
                 <h3 className="text-xl font-semibold text-indigo-800 mb-4">Your Current Balance</h3>
-                <ul className="space-y-2">
-                  <li className="text-2xl font-bold text-indigo-600 mb-4">
-                    {user.credits.toLocaleString()} Common Credits
-                  </li>
-                  <li>
-                    <span className="font-medium">0 Credits</span>
-                    <span className="ml-2">- Text To Speech Pro</span>
-                  </li>
-                  <li>
-                    <span className="font-medium">0 Credits</span>
-                    <span className="ml-2">- Voice Cloning Pro</span>
-                  </li>
-                  <li>
-                    <span className="font-medium">0 Credits</span>
-                    <span className="ml-2">- Talking Image</span>
-                  </li>
-                </ul>
+                <p className="text-2xl font-bold text-indigo-600 mb-4">
+                  {creditBalance.common.toLocaleString()} Common Credits
+                </p>
+                {Object.entries(creditBalance).map(([service, credits]) => (
+                  service !== 'common' && (
+                    <p key={service} className="text-lg">
+                      <span className="font-medium">{credits.toLocaleString()} Credits</span> - {service}
+                    </p>
+                  )
+                ))}
               </div>
 
               <form onSubmit={handlePasswordChange} className="bg-white p-6 rounded-lg shadow-md">

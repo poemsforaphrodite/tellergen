@@ -111,58 +111,122 @@ export default function Home() {
   }, [])
 
   const handleGenerate = async () => {
-    setIsLoading(true)
-    setError(null)
+    console.log("handleGenerate called");
+    setIsLoading(true);
+    setError(null);
     try {
-      const endpoint = activeTab === "TTS" ? "/api/tts" : "/api/clone-voice"
-      const formData = new FormData()
-      formData.append("text", text)
-      formData.append("voice", selectedVoice)
+      const endpoint = activeTab === "TTS" ? "/api/tts" : activeTab === "Talking Image" ? "/api/talking-image" : "/api/clone-voice";
+      const formData = new FormData();
+      formData.append("text", text);
+      formData.append("voice", selectedVoice);
       if (audioFile) {
-        formData.append("audio_file", audioFile)
+        formData.append("audio_file", audioFile);
       }
 
-      // Check if the user has enough credits
-      const creditsNeeded = text.length
-      const creditsResponse = await fetch('/api/user/credits')
-      const creditsData = await creditsResponse.json()
-      
-      if (creditsData.credits < creditsNeeded) {
-        throw new Error("Not enough credits. Please purchase more credits to continue.")
+      // Calculate credits needed based on the length of the text
+      const creditsNeeded = text.length; // 1 credit per character
+      console.log(`Credits needed: ${creditsNeeded}`);
+
+      // Fetch current credits
+      const creditsResponse = await fetch('/api/user/credits');
+      const creditsData = await creditsResponse.json();
+      console.log('Current credits data:', creditsData);
+
+      // Check credits based on the active tab
+      if (activeTab === "TTS") {
+        // Check if TTS credits are available
+        if (creditsData['credits']['Text to Speech Pro'] >= creditsNeeded) {
+          console.log('Using TTS credits');
+          // Deduct from TTS credits
+          await fetch('/api/user/update-credits', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ creditsUsed: creditsNeeded, creditType: 'Text to Speech Pro' }),
+          });
+        } else if (creditsData['credits']['common'] >= creditsNeeded) {
+          console.log('Using common credits');
+          // Deduct from common credits if TTS credits are not sufficient
+          await fetch('/api/user/update-credits', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ creditsUsed: creditsNeeded }),
+          });
+        } else {
+          console.error("Not enough credits for TTS. Please purchase more credits to continue.");
+          throw new Error("Not enough credits for TTS. Please purchase more credits to continue.");
+        }
+      } else if (activeTab === "Talking Image") {
+        // Assuming 1 credit per 10 seconds for Talking Image
+        const audioDuration = await getAudioDuration(audioFile);
+        const creditsNeededForImage = Math.ceil(audioDuration / 10); // 1 credit per 10 seconds
+
+        if (creditsData['credits']['common'] >= creditsNeededForImage) {
+          console.log('Using common credits for Talking Image');
+          // Deduct from common credits
+          await fetch('/api/user/update-credits', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ creditsUsed: creditsNeededForImage }),
+          });
+        } else {
+          console.error("Not enough credits for Talking Image. Please purchase more credits to continue.");
+          throw new Error("Not enough credits for Talking Image. Please purchase more credits to continue.");
+        }
+      } else if (activeTab === "Clone voice") {
+        // Assuming Clone Voice uses Voice Cloning Pro credits
+        if (creditsData['credits']['Voice Cloning Pro'] >= creditsNeeded) {
+          console.log('Using Voice Cloning Pro credits');
+          // Deduct from Voice Cloning Pro credits
+          await fetch('/api/user/update-credits', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ creditsUsed: creditsNeeded, creditType: 'Voice Cloning Pro' }),
+          });
+        } else if (creditsData['credits']['common'] >= creditsNeeded) {
+          console.log('Using common credits for Clone Voice');
+          // Deduct from common credits if Voice Cloning Pro credits are not sufficient
+          await fetch('/api/user/update-credits', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ creditsUsed: creditsNeeded }),
+          });
+        } else {
+          console.error("Not enough credits for Clone Voice. Please purchase more credits to continue.");
+          throw new Error("Not enough credits for Clone Voice. Please purchase more credits to continue.");
+        }
       }
 
       const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
+      console.log('Audio generation result:', result);
 
       if (response.ok && result.audioData) {
-        setGeneratedAudio(result.audioData)
-        
-        // Deduct credits
-        const updateCreditsResponse = await fetch('/api/user/update-credits', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ creditsUsed: creditsNeeded }),
-        })
-        
-        if (!updateCreditsResponse.ok) {
-          console.error("Failed to update credits")
-        }
+        setGeneratedAudio(result.audioData);
       } else {
-        throw new Error(result.error || "Failed to generate audio")
+        console.error(result.error || "Failed to generate audio");
+        throw new Error(result.error || "Failed to generate audio");
       }
     } catch (error) {
-      console.error("Error generating audio:", error)
-      setError((error as Error).message)
+      console.error("Error generating audio:", error);
+      setError((error as Error).message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleFileUpload = () => {
     fileInputRef.current?.click()
