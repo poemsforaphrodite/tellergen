@@ -29,25 +29,31 @@ export default function CheckoutPage() {
       if (productQueryName && productPrice) {
         // Map the query parameter to the defined constants
         let mappedProductName = '';
+        let price = 0;
 
         if (productQueryName.toLowerCase().includes('text_to_speech_pro')) {
           mappedProductName = PRODUCTS.TEXT_TO_SPEECH_PRO;
+          price = 499; // Set price for Text to Speech Pro
         } else if (productQueryName.toLowerCase().includes('voice_cloning_pro')) {
           mappedProductName = PRODUCTS.VOICE_CLONING_PRO;
+          price = 499; // Set price for Voice Cloning Pro
         } else if (productQueryName.toLowerCase().includes('talking_image_pro')) {
           mappedProductName = PRODUCTS.TALKING_IMAGE_PRO;
-        } else if (productQueryName.toLowerCase().includes('combo_pack')) { // Added condition for Combo Pack
+          price = 499; // Set price for Talking Image Pro
+        } else if (productQueryName.toLowerCase().includes('combo_pack')) {
           mappedProductName = PRODUCTS.COMBO_PACK;
+          price = 499; // Set price for Combo Pack
         } else if (productQueryName.toLowerCase().endsWith('_credits')) {
           // Handle credit-based products
           mappedProductName = productQueryName.toLowerCase();
+          price = parseFloat(productPrice) || 0; // Use the provided price for credits
         } else {
           setError('Invalid product selection');
           setLoading(false);
           return;
         }
 
-        const subtotal = parseFloat(productPrice) || 0;
+        const subtotal = price; // Use the mapped price
         const calculatedGst = parseFloat((subtotal * 0.18).toFixed(2));
         const calculatedTotal = parseFloat((subtotal + calculatedGst).toFixed(2));
         setTotal(calculatedTotal);

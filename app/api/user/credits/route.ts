@@ -15,7 +15,7 @@ export async function GET() {
   try {
     // Select all necessary fields
     const user = await User.findById(userId).select(
-      'credits textToSpeechCharacters voiceCloningCharacters talkingImageMinutes'
+      'credits textToSpeechCharacters voiceCloningCharacters talkingImageCharacters' // Updated field name
     )
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -26,8 +26,8 @@ export async function GET() {
         common: user.credits || 0,
         'Text to Speech Pro': user.textToSpeechCharacters || 0,
         'Voice Cloning Pro': user.voiceCloningCharacters || 0,
-        'Talking Image': user.talkingImageMinutes
-          ? Math.floor(user.talkingImageMinutes * 6) // 1 minute = 6 credits
+        'Talking Image': user.talkingImageCharacters // Updated field name
+          ? Math.floor(user.talkingImageCharacters) // 1 character = 6 credits
           : 0,
       },
     })

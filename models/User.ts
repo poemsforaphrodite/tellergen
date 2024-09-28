@@ -16,7 +16,7 @@ export interface UserDocument extends Document {
   credits: number;
   textToSpeechCharacters: number;
   voiceCloningCharacters: number;
-  talkingImageMinutes: number;
+  talkingImageCharacters: number; // Changed from talkingImageMinutes to talkingImageCharacters
   subscriptions: {
     [key: string]: boolean;
   };
@@ -39,7 +39,7 @@ const UserSchema: Schema = new Schema({
   credits: { type: Number, default: 0 },
   textToSpeechCharacters: { type: Number, default: 0 },
   voiceCloningCharacters: { type: Number, default: 0 },
-  talkingImageMinutes: { type: Number, default: 0 },
+  talkingImageCharacters: { type: Number, default: 0 }, // Changed from talkingImageMinutes to talkingImageCharacters
   subscriptions: {
     type: Map,
     of: Boolean,

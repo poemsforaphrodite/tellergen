@@ -113,8 +113,8 @@ export async function POST(request: Request) {
             user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
             console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
           } else if (productName === PRODUCTS.TALKING_IMAGE_PRO) {
-            user.talkingImageMinutes = (user.talkingImageMinutes || 0) + 100; // Assuming 100 minutes for Talking Image Pro
-            console.log(`User Talking Image minutes updated: +100 minutes`);
+            user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 600; // Ensure it adds the correct characters
+            console.log(`User Talking Image characters updated: +${charactersToAdd} characters`);
           } else {
             console.warn(`Unrecognized product: ${productName}. Defaulting to Text-to-Speech Pro.`);
             user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
@@ -153,8 +153,8 @@ export async function POST(request: Request) {
               user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
               console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
             } else if (transaction.productName === PRODUCTS.TALKING_IMAGE_PRO) {
-              user.talkingImageMinutes = (user.talkingImageMinutes || 0) + 100; // Assuming 100 minutes for Talking Image Pro
-              console.log(`User Talking Image minutes updated: +100 minutes`);
+              user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 100; // Changed from talkingImageMinutes to talkingImageCharacters
+              console.log(`User Talking Image characters updated: +100 characters`);
             } else {
               console.warn(`Unrecognized product: ${transaction.productName}. Defaulting to Text-to-Speech Pro.`);
               user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
