@@ -1,13 +1,35 @@
 import Link from 'next/link';
+import { useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function HomePageContent() {
+  // Remove the unused isLoggedIn state
+  const router = useRouter();
+
+  const checkLoginStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/status');
+      const data = await response.json();
+      if (!data.isLoggedIn) {
+        router.push('/login'); // Redirect to login if not logged in
+      }
+      // Remove the else block that was setting isLoggedIn
+    } catch (error) {
+      console.error("Error checking login status:", error);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, [checkLoginStatus]);
+
   return (
     <div>
       <nav className="bg-gray-800 p-4">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-white text-2xl font-bold">Your App Name</h1>
-          <Link href="/login" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Login
+          <Link href="/home" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Home
           </Link>
         </div>
       </nav>

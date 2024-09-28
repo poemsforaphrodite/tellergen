@@ -32,7 +32,7 @@ export default function PricingPage() {
     },
     {
       title: "TellerGen Talking Image Pro",
-      price: 799,
+      price: 499,
       features: [
         "Up to 1000 minutes of video generation",
         "High quality image to video",

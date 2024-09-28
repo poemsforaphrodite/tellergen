@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { HomeIcon, CreditCardIcon, UserIcon } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { useRouter } from 'next/navigation'
 
 interface User {
   _id: string;
@@ -51,11 +52,26 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null)
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string | null>(null)
+  const router = useRouter()
+
+  const checkLoginStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/status')
+      const data = await response.json()
+      if (!data.isLoggedIn) {
+        router.push('/login'); // Redirect to login if not logged in
+      } else {
+        fetchUserData()
+        fetchCredits()
+      }
+    } catch (error) {
+      console.error("Error checking login status:", error);
+    }
+  }, [router]) // Add router to the dependency array
 
   useEffect(() => {
-    fetchUserData()
-    fetchCredits()
-  }, [])
+    checkLoginStatus()
+  }, [checkLoginStatus])
 
   const fetchUserData = async () => {
     try {
@@ -128,7 +144,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900 p-4 pb-16">
-      <Card className="max-w-4xl mx-auto backdrop-blur-md bg-white/90 shadow-lg">
+      <Card className="max-w-4xl mx-auto backdrop-blur-md bg-white/90 shadow-lg p-4 md:p-6 lg:p-8">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-indigo-800">Account</CardTitle>
         </CardHeader>
@@ -138,8 +154,8 @@ export default function AccountPage() {
           ) : error ? (
             <p className="text-center text-red-500">Error: {error}</p>
           ) : user ? (
-            <div className="space-y-8">
-              <div className="flex items-center space-x-6 bg-indigo-50 p-6 rounded-lg">
+            <div className="space-y-8 md:space-y-10">
+              <div className="flex flex-col md:flex-row items-center space-x-0 md:space-x-6 bg-indigo-50 p-4 md:p-6 rounded-lg">
                 <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
                   <AvatarFallback className="text-3xl bg-indigo-200 text-indigo-800">
                     {user.email.charAt(0).toUpperCase()}
@@ -150,7 +166,7 @@ export default function AccountPage() {
                 </div>
               </div>
 
-              <div className="bg-indigo-50 rounded-lg p-6 shadow-inner">
+              <div className="bg-indigo-50 rounded-lg p-4 md:p-6 shadow-inner">
                 <h3 className="text-xl font-semibold text-indigo-800 mb-4">Your Current Balance</h3>
                 <p className="text-2xl font-bold text-indigo-600 mb-4">
                   {creditBalance.common.toLocaleString()} Common Credits
@@ -164,7 +180,7 @@ export default function AccountPage() {
                 ))}
               </div>
 
-              <form onSubmit={handlePasswordChange} className="bg-white p-6 rounded-lg shadow-md">
+              <form onSubmit={handlePasswordChange} className="bg-white p-4 md:p-6 rounded-lg shadow-md">
                 <h3 className="text-xl font-semibold text-indigo-800 mb-4">Change Password</h3>
                 <div className="space-y-4">
                   <div>
@@ -209,7 +225,7 @@ export default function AccountPage() {
                     <AlertDescription>{passwordChangeSuccess}</AlertDescription>
                   </Alert>
                 )}
-                <Button type="submit" className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Button type="submit" className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto">
                   Change Password
                 </Button>
               </form>

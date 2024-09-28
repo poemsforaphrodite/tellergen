@@ -3,14 +3,7 @@ import User from '@/models/User';
 import dbConnect from '@/lib/mongodb';
 import { PRODUCTS } from '@/constants/products'; // Importing product constants
 
-// Define a mapping of base payment amounts (in rupees) to credits
-const amountCreditsMap: { [key: number]: number } = {
-  10: 1000,
-  30: 4000,
-  50: 7000,
-  100: 12000,
-  // Removed 499 from credits mapping
-};
+// Remove the unused amountCreditsMap
 
 export async function POST(request: Request) {
   console.log('Payment callback received via POST');
@@ -93,97 +86,33 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
       }
 
-      // Determine action based on the rounded base amount and product name
-      if (roundedBaseAmount === 499) {
-        const charactersToAdd = 1000000;
+      // Check the product name to determine which feature to update
+      const productName = transaction.productName || '';
+      console.log(`Processing product: ${productName}`);
 
-        if (transaction.status === 'completed') {
-          console.log(`Transaction already processed: ${transactionId}`);
-        } else {
-          transaction.status = 'completed';
+      const charactersToAdd = 1000000; // For Pro Plans and Combo Pack
 
-          // Check the product name to determine which feature to update
-          const productName = transaction.productName || '';
-          console.log(`Processing product: ${productName}`);
-
-          if (productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
-            user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
-            console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
-          } else if (productName === PRODUCTS.VOICE_CLONING_PRO) {
-            user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
-            console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
-          } else if (productName === PRODUCTS.TALKING_IMAGE_PRO) {
-            user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 600; // Ensure it adds the correct characters
-            console.log(`User Talking Image characters updated: +${charactersToAdd} characters`);
-          } else {
-            console.warn(`Unrecognized product: ${productName}. Defaulting to Text-to-Speech Pro.`);
-            user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
-            console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
-          }
-
-          await user.save();
-        }
-      } else if (roundedBaseAmount > 0) {
-        // Handle credit-based and standard credits addition
-        if (roundedBaseAmount in amountCreditsMap) {
-          creditsToAdd = amountCreditsMap[roundedBaseAmount];
-        } else {
-          console.error(`Invalid payment amount received: Rs${totalAmountInRupees}`);
-          return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
-        }
-
-        // Check if the transaction has already been processed
-        if (transaction.status === 'completed') {
-          console.log(`Transaction already processed: ${transactionId}`);
-        } else {
-          // Update transaction status
-          transaction.status = 'completed';
-
-          // Determine if the purchase is for credits or a Pro plan
-          const isProPlan = transaction.productName ? transaction.productName.includes('_pro') : false;
-
-          if (isProPlan) {
-            // This block might be redundant if Pro plans always have roundedBaseAmount === 499
-            // Included here for completeness
-            const charactersToAdd = 1000000;
-            if (transaction.productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
-              user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
-              console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
-            } else if (transaction.productName === PRODUCTS.VOICE_CLONING_PRO) {
-              user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
-              console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
-            } else if (transaction.productName === PRODUCTS.TALKING_IMAGE_PRO) {
-              user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 100; // Changed from talkingImageMinutes to talkingImageCharacters
-              console.log(`User Talking Image characters updated: +100 characters`);
-            } else {
-              console.warn(`Unrecognized product: ${transaction.productName}. Defaulting to Text-to-Speech Pro.`);
-              user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
-              console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
-            }
-          } else if (transaction.productName && transaction.productName.endsWith('_credits')) {
-            // Handle credit-based purchases
-            const creditsMatch = transaction.productName.match(/^(\d+)_credits$/);
-            if (creditsMatch && creditsMatch[1]) {
-              const creditsToAddFromProduct = parseInt(creditsMatch[1], 10);
-              user.credits += creditsToAddFromProduct;
-              console.log(`User credits updated: +${creditsToAddFromProduct} credits`);
-            } else {
-              // Fallback to amountCreditsMap if productName doesn't match expected pattern
-              user.credits += creditsToAdd;
-              console.log(`User credits updated: +${creditsToAdd} credits`);
-            }
-          } else {
-            // For standard credit additions
-            user.credits += creditsToAdd;
-            console.log(`User credits updated: +${creditsToAdd} credits`);
-          }
-
-          await user.save();
-        }
+      if (productName === PRODUCTS.COMBO_PACK) {
+        user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
+        user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
+        user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 600; // Adjust as needed
+        console.log(`User Combo Pack features updated: +${charactersToAdd} characters for TTS and Voice Cloning, +600 for Talking Image`);
+      } else if (productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
+        user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
+        console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
+      } else if (productName === PRODUCTS.VOICE_CLONING_PRO) {
+        user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
+        console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
+      } else if (productName === PRODUCTS.TALKING_IMAGE_PRO) {
+        user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 600; // Ensure it adds the correct characters
+        console.log(`User Talking Image characters updated: +600 characters`);
       } else {
-        console.error(`Unhandled payment amount: Rs${roundedBaseAmount}`);
-        return NextResponse.json({ error: 'Unhandled payment amount' }, { status: 400 });
+        console.warn(`Unrecognized product: ${productName}. Defaulting to Text-to-Speech Pro.`);
+        user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
+        console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
       }
+
+      await user.save();
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       const creditUrl = new URL('/credit', baseUrl);

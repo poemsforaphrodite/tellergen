@@ -27,7 +27,6 @@ export default function CheckoutPage() {
       const productPrice = searchParams.get('price');
 
       if (productQueryName && productPrice) {
-        // Map the query parameter to the defined constants
         let mappedProductName = '';
         let price = 0;
 
@@ -42,9 +41,8 @@ export default function CheckoutPage() {
           price = 499; // Set price for Talking Image Pro
         } else if (productQueryName.toLowerCase().includes('combo_pack')) {
           mappedProductName = PRODUCTS.COMBO_PACK;
-          price = 499; // Set price for Combo Pack
+          price = 999; // Set price for Combo Pack
         } else if (productQueryName.toLowerCase().endsWith('_credits')) {
-          // Handle credit-based products
           mappedProductName = productQueryName.toLowerCase();
           price = parseFloat(productPrice) || 0; // Use the provided price for credits
         } else {
@@ -53,20 +51,17 @@ export default function CheckoutPage() {
           return;
         }
 
-        const subtotal = price; // Use the mapped price
+        const subtotal = price;
         const calculatedGst = parseFloat((subtotal * 0.18).toFixed(2));
         const calculatedTotal = parseFloat((subtotal + calculatedGst).toFixed(2));
         setTotal(calculatedTotal);
 
-        // Determine if the product is a Pro Plan or Credits
-        const isProPlan = mappedProductName.includes('_pro') || mappedProductName === PRODUCTS.COMBO_PACK; // Updated condition
+        const isProPlan = mappedProductName.includes('_pro') || mappedProductName === PRODUCTS.COMBO_PACK;
         let creditsValue: number | undefined = undefined;
 
         if (isProPlan) {
-          // For Pro Plans and Combo Pack, set credits to 0 explicitly
-          creditsValue = 0;
+          creditsValue = 0; // For Pro Plans and Combo Pack
         } else if (mappedProductName.endsWith('_credits')) {
-          // Extract the number of credits from the product name
           const creditsMatch = mappedProductName.match(/^(\d+)_credits$/);
           if (creditsMatch && creditsMatch[1]) {
             creditsValue = parseInt(creditsMatch[1], 10);
@@ -96,23 +91,22 @@ export default function CheckoutPage() {
     setLoading(true);
     try {
       const merchantTransactionId = `MT${Date.now()}${Math.floor(Math.random() * 1000)}`;
-
       const creditsValue = product?.credits ?? 0;
 
       const payload: any = {
         merchantId: process.env.NEXT_PUBLIC_PHONEPE_MERCHANT_ID,
         merchantTransactionId: merchantTransactionId,
         merchantUserId: "MUID" + Date.now(),
-        amount: Math.round(total * 100), // Convert to paise and ensure it's an integer
+        amount: Math.round(total * 100), // Convert to paise
         redirectUrl: `${window.location.origin}/api/payment/callback`,
-        redirectMode: "POST", // Changed to 'POST' to match backend
+        redirectMode: "POST",
         callbackUrl: `${window.location.origin}/api/payment/callback`,
-        mobileNumber: phone.replace(/\s+/g, ''), // Remove spaces from phone number
+        mobileNumber: phone.replace(/\s+/g, ''),
         paymentInstrument: {
           type: "PAY_PAGE",
         },
         credits: creditsValue,
-        productName: product?.name, // Ensuring correct product name is sent
+        productName: product?.name,
       };
 
       console.log('Payload:', payload);

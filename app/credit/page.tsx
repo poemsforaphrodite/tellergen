@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,11 +23,26 @@ export default function CreditPage() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // Remove the unused isLoggedIn state
   const router = useRouter()
 
+  const checkLoginStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/status')
+      const data = await response.json()
+      if (!data.isLoggedIn) {
+        router.push('/login'); // Redirect to login if not logged in
+      } else {
+        fetchCredits()
+      }
+    } catch (error) {
+      console.error("Error checking login status:", error);
+    }
+  }, [router]) // Add router to the dependency array
+
   useEffect(() => {
-    fetchCredits()
-  }, [])
+    checkLoginStatus()
+  }, [checkLoginStatus])
 
   const fetchCredits = async () => {
     try {
@@ -79,6 +94,9 @@ export default function CreditPage() {
           <CardTitle className="text-3xl font-bold text-indigo-800">Credit</CardTitle>
         </CardHeader>
         <CardContent className="space-y-8">
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+            View Credits
+          </Button>
           {loading ? (
             <p className="text-center text-gray-600">Loading...</p>
           ) : error ? (
