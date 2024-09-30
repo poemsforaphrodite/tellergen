@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import User from '@/models/User';
 import dbConnect from '@/lib/mongodb';
-import { PRODUCTS } from '@/constants/products'; // Importing product constants
-
-// Remove the unused amountCreditsMap
+import { PRODUCTS } from '@/constants/products'; // Ensure importing PRODUCTS
 
 export async function POST(request: Request) {
   console.log('Payment callback received via POST');
@@ -88,7 +86,11 @@ export async function POST(request: Request) {
 
       // Check the product name to determine which feature to update
       const productName = transaction.productName || '';
-      console.log(`Processing product: ${productName}`);
+      console.log(`Processing product: "${productName}"`);
+
+      const normalizedProductName = productName.trim().toLowerCase();
+      console.log(`Normalized productName: "${normalizedProductName}"`);
+      console.log(`Expected PRODUCTS.CREDITS_1000: "${PRODUCTS.CREDITS_1000.toLowerCase()}"`);
 
       const charactersToAdd = 1000000; // For Pro Plans and Combo Pack
 
@@ -106,10 +108,28 @@ export async function POST(request: Request) {
       } else if (productName === PRODUCTS.TALKING_IMAGE_PRO) {
         user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 600; // Ensure it adds the correct characters
         console.log(`User Talking Image characters updated: +600 characters`);
+      } else if (normalizedProductName === PRODUCTS.CREDITS_1000.toLowerCase()) {
+        creditsToAdd = 1000;
+        console.log(`User received ${creditsToAdd} credits`);
+      } else if (productName === PRODUCTS.CREDITS_4000) {
+        creditsToAdd = 4000;
+        console.log(`User received ${creditsToAdd} credits`);
+      } else if (productName === PRODUCTS.CREDITS_7000) {
+        creditsToAdd = 7000;
+        console.log(`User received ${creditsToAdd} credits`);
+      } else if (productName === PRODUCTS.CREDITS_12000) {
+        creditsToAdd = 12000;
+        console.log(`User received ${creditsToAdd} credits`);
       } else {
-        console.warn(`Unrecognized product: ${productName}. Defaulting to Text-to-Speech Pro.`);
+        console.warn(`Unrecognized product: "${productName}". Defaulting to Text-to-Speech Pro.`);
         user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
         console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
+      }
+
+      // Update credits if applicable
+      if (creditsToAdd !== undefined) {
+        user.credits = (user.credits || 0) + creditsToAdd;
+        console.log(`User credits updated: +${creditsToAdd} credits`);
       }
 
       await user.save();

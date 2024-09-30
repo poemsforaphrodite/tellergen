@@ -11,10 +11,11 @@ export async function POST(request: Request) {
   console.log('Signup attempt:', { username, email }); // Don't log passwords
 
   try {
-    // Check if user already exists (by email or username)
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    // Check if user already exists (by email only)
+    console.log('Checking for existing user with email:', email); // Updated logging
+    const existingUser = await User.findOne({ email }); // Check only by email
     if (existingUser) {
-      console.log('User already exists');
+      console.log('User already exists:', existingUser); // Log existing user details
       return NextResponse.json({ success: false, message: 'User already exists' }, { status: 400 });
     }
 

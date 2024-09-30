@@ -133,7 +133,7 @@ export async function POST(request: Request) {
   // Send the payment initiation request to PhonePe API
   try {
     const response = await fetch(
-      'https://api.phonepe.com/apis/hermes/pg/v1/pay', // Production endpoint
+      'https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay',
       {
         method: 'POST',
         headers: {

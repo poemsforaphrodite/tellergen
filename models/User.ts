@@ -21,6 +21,8 @@ export interface UserDocument extends Document {
     [key: string]: boolean;
   };
   transactions: Transaction[];
+  resetPasswordToken?: string; // Add this line
+  resetPasswordExpires?: Date;  // Add this line
 }
 
 const TransactionSchema: Schema = new Schema({
@@ -45,6 +47,8 @@ const UserSchema: Schema = new Schema({
     of: Boolean,
   },
   transactions: { type: [TransactionSchema], default: [] },
+  resetPasswordToken: { type: String },   // Add this line
+  resetPasswordExpires: { type: Date },   // Add this line
 });
 
 // Create an index on transactions.transactionId for faster lookup
