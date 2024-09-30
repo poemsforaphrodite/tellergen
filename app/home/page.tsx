@@ -809,9 +809,9 @@ export default function Home() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
-                { title: "TellerGen Text to Speech Pro", price: 499, features: ["100+ Premium and Celebrity voices", "High quality audio download", "Ultra realistic voices", "Unlimited characters"] },
-                { title: "TellerGen Voice Cloning Pro", price: 499, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice", "Unlimited characters"] },
-                { title: "TellerGen Talking Image Pro", price: 799, features: ["Up to 1000 minutes of video generation", "High quality image to video", "Realistic head movement", "Perfect lip syncing"] },
+                { title: "TellerGen Text to Speech Pro", price: 499, features: ["100+ Premium and Celebrity voices", "High quality audio download", "Ultra realistic voices", "1 million characters"] },
+                { title: "TellerGen Voice Cloning Pro", price: 499, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice"] },
+                { title: "TellerGen Talking Image Pro", price: 799, features: ["Up to 600 minutes of video generation", "High quality image to video", "Realistic head movement", "Perfect lip syncing"] },
                 { title: "TellerGen Combo Pack", price: 999, features: ["Text to Speech Pro", "Talking Image Pro", "Voice Cloning Pro", "Best value for all features"] }
               ].map((plan, index) => (
                 <div key={index} className="bg-indigo-50 p-6 rounded-lg shadow-md space-y-4">
@@ -824,12 +824,21 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button 
-                    onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} 
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
-                  >
-                    {plan.title === "TellerGen Combo Pack" ? "Buy Combo" : plan.title === "TellerGen Talking Image Pro" ? "Free With Combo" : "Buy Pro"} {plan.title !== "TellerGen Talking Image Pro" && `(Rs ${plan.price})`}
-                  </Button>
+                  {plan.title === "TellerGen Talking Image Pro" ? (
+                    <Button 
+                      className="w-full bg-gray-400 text-white mt-4 cursor-not-allowed"
+                      disabled
+                    >
+                      Only Available in Combo Pack
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} 
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
+                    >
+                      {plan.title === "TellerGen Combo Pack" ? "Buy Combo" : "Buy Pro"} (Rs {plan.price})
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
