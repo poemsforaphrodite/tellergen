@@ -5,8 +5,9 @@ export async function POST(request: Request) {
   const formData = await request.formData()
   const text = formData.get('text') as string
   const voice = formData.get('voice') as string
+  const language = formData.get('language') as string
 
-  console.log('Received request:', { text, voice })
+  console.log('Received request:', { text, voice, language })
 
   try {
     const client = await Client.connect("nikkmitra/clone")
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     const result = await client.predict("/tts_generate", {
       text,
       voice,
-      language: "en",
+      language,
     })
 
     console.log('Gradio prediction result:', result)

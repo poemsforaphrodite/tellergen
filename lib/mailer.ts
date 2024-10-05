@@ -1,4 +1,4 @@
-import { MailerSend, EmailParams} from "mailersend";
+import { MailerSend, EmailParams } from "mailersend";
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_API_KEY as string,
@@ -7,30 +7,38 @@ const mailerSend = new MailerSend({
 export const sendPasswordResetEmail = async (toEmail: string, resetToken: string) => {
   const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password/${resetToken}`;
 
-  const emailParams = {
-    from: {
+  const emailParams = new EmailParams()
+    .setFrom({
       email: process.env.MAILERSEND_FROM_EMAIL as string,
-      name: 'Your App Name',
-    },
-    to: [
+      name: 'TellerGen',
+    })
+    .setTo([
       {
         email: toEmail,
       },
-    ],
-    subject: 'Password Reset Request',
-    text: `You requested a password reset. Click the link below to reset your password:\n\n${resetLink}`,
-    html: `<p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`,
-  } as EmailParams;
+    ])
+    .setSubject('Password Reset Request')
+    .setText(`You requested a password reset. Click the link below to reset your password:\n\n${resetLink}`)
+    .setHtml(`<p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`);
 
   try {
-    await mailerSend.email.send(emailParams);
-    console.log(`Password reset email sent to ${toEmail}`);
+    console.log('Attempting to send email with params:', emailParams);
+    const result = await mailerSend.email.send(emailParams);
+    console.log('Email sent successfully. Result:', result);
   } catch (error: any) {
-    console.error('Error sending password reset email:', {
-      message: error.message,
-      stack: error.stack,
-      response: error.response, // If available
-    });
-    throw new Error('Failed to send password reset email');
+    if (error instanceof Error) {
+      console.error('Error sending password reset email:', {
+        message: error.message,
+        stack: error.stack,
+      });
+    } else {
+      console.error('Unknown error sending password reset email:', error);
+    }
+
+    if (error.response) {
+      console.error('API Response:', JSON.stringify(error.response, null, 2));
+    }
+
+    // Handle the error as needed
   }
 };

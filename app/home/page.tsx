@@ -119,6 +119,11 @@ export default function Home() {
       const formData = new FormData();
       formData.append("text", text);
       formData.append("voice", selectedVoice);
+      
+      // Determine the language based on the selected category
+      const language = selectedCategory.toLowerCase() === "hindi" ? "hi" : "en";
+      formData.append("language", language);
+
       if (audioFile) {
         formData.append("audio_file", audioFile);
       }
