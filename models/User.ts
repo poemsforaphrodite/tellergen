@@ -38,10 +38,10 @@ const UserSchema: Schema = new Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  credits: { type: Number, default: 0 },
-  textToSpeechCharacters: { type: Number, default: 0 },
-  voiceCloningCharacters: { type: Number, default: 0 },
-  talkingImageCharacters: { type: Number, default: 0 }, // Changed from talkingImageMinutes to talkingImageCharacters
+  credits: { type: Number, default: 1000 },
+  textToSpeechCharacters: { type: Number, default: 1000 },
+  voiceCloningCharacters: { type: Number, default: 1000 },
+  talkingImageCharacters: { type: Number, default: 1000 }, // Changed from talkingImageMinutes to talkingImageCharacters
   subscriptions: {
     type: Map,
     of: Boolean,

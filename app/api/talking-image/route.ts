@@ -9,21 +9,31 @@ export async function POST(request: Request) {
   console.log('Received request:', { image: image?.name, audio: audio?.name })
 
   try {
-    const client = await Client.connect("nikkmitra/Wav2lip-ZeroGPU")
+    // Update the client connection to use the correct space
+    const client = await Client.connect("nikkmitra/talking_image")
     console.log('Connected to Gradio client')
 
-    const result = await client.predict("/run_infrence", [
+    // Update the prediction call with the correct API name and parameters
+    const result = await client.predict("/generate_video", [
       image,
       audio,
+      "hubert_audio_only", // infer_type
+      0, // pose_yaw
+      0, // pose_pitch
+      0, // pose_roll
+      0.5, // face_location
+      0.5, // face_scale
+      50, // step_T
+      true, // face_sr
+      0, // seed
     ])
 
     console.log('Gradio prediction result:', JSON.stringify(result, null, 2))
 
-    if (result && result.data && result.data[0] && result.data[0].video) {
-      const videoData = result.data[0].video
+    if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
+      const videoData = result.data[1]?.value?.video // Using the second item (index 1) which contains the SR video
       
-      // Check if videoData is an object with a 'url' property
-      if (typeof videoData === 'object' && videoData.url) {
+      if (videoData && videoData.url) {
         const videoUrl = videoData.url
         
         // Download the video file
@@ -40,7 +50,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ videoData: `data:video/mp4;base64,${base64Video}` })
       }
       
-      // If it's not an object with a 'url' property, throw an error
       throw new Error("Unexpected video data format")
     } else {
       throw new Error("Failed to generate talking image video: No data in result")

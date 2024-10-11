@@ -470,7 +470,15 @@ export default function Home() {
                   <MicIcon className="w-4 h-4 mr-2" />
                   TTS
                 </TabsTrigger>
-                <TabsTrigger value="Talking Image" className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all">
+                <TabsTrigger 
+                  value="Talking Image" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all"
+                  onClick={(e) => {
+                    if (!isLoggedIn) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
                   <ImageIcon className="w-4 h-4 mr-2" />
                   Talking Image
                 </TabsTrigger>
@@ -480,7 +488,6 @@ export default function Home() {
                   onClick={(e) => {
                     if (!isLoggedIn) {
                       e.preventDefault();
-                      setError("Please log in to access the Clone voice feature.");
                     }
                   }}
                 >
@@ -555,69 +562,85 @@ export default function Home() {
               </TabsContent>
               
               <TabsContent value="Talking Image">
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-lg font-semibold mb-4">Upload Image and Audio</h2>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          ref={imageInputRef}
-                          onChange={handleImageChange}
-                        />
-                        <Button 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={handleImageUpload}
-                        >
-                          <UploadIcon className="h-4 w-4 mr-2" />
-                          {imageFile ? "Change image" : "Upload image"}
-                        </Button>
-                        <Input
-                          type="file"
-                          accept="audio/*"
-                          className="hidden"
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                        />
-                        <Button 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={handleFileUpload}
-                        >
-                          <UploadIcon className="h-4 w-4 mr-2" />
-                          {audioFile ? "Change audio" : "Upload audio"}
-                        </Button>
+                {isLoggedIn ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-lg font-semibold mb-4">Upload Image and Audio</h2>
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-4">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            ref={imageInputRef}
+                            onChange={handleImageChange}
+                          />
+                          <Button 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={handleImageUpload}
+                          >
+                            <UploadIcon className="h-4 w-4 mr-2" />
+                            {imageFile ? "Change image" : "Upload image"}
+                          </Button>
+                          <Input
+                            type="file"
+                            accept="audio/*"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                          />
+                          <Button 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={handleFileUpload}
+                          >
+                            <UploadIcon className="h-4 w-4 mr-2" />
+                            {audioFile ? "Change audio" : "Upload audio"}
+                          </Button>
+                        </div>
+                        
+                        {imageFile && (
+                          <div className="bg-gray-100 p-4 rounded-md">
+                            <p className="text-sm font-medium mb-2">Selected Image:</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">{imageFile.name}</span>
+                              <Button variant="ghost" size="sm" onClick={() => setImageFile(null)}>
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {audioFile && (
+                          <div className="bg-gray-100 p-4 rounded-md">
+                            <p className="text-sm font-medium mb-2">Selected Audio:</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">{audioFile.name}</span>
+                              <Button variant="ghost" size="sm" onClick={() => setAudioFile(null)}>
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      
-                      {imageFile && (
-                        <div className="bg-gray-100 p-4 rounded-md">
-                          <p className="text-sm font-medium mb-2">Selected Image:</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">{imageFile.name}</span>
-                            <Button variant="ghost" size="sm" onClick={() => setImageFile(null)}>
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {audioFile && (
-                        <div className="bg-gray-100 p-4 rounded-md">
-                          <p className="text-sm font-medium mb-2">Selected Audio:</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">{audioFile.name}</span>
-                            <Button variant="ghost" size="sm" onClick={() => setAudioFile(null)}>
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                      )}
+                    </div>
+                    
+                    <div className="bg-yellow-100 p-4 rounded-md">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Note:</strong> Please do not use long paragraphs. Using long paragraphs may degrade the quality of voice. For longer text generation, use multiple paragraphs of 25 to 30 words each.
+                      </p>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-4 bg-gray-100 rounded-md text-center">
+                    <p className="text-lg font-semibold mb-2">Pro Feature</p>
+                    <p className="text-gray-600 mb-4">Please log in to access the Talking Image feature.</p>
+                    <Link href="/login">
+                      <Button variant="default">Log In</Button>
+                    </Link>
+                  </div>
+                )}
               </TabsContent>
               
               <TabsContent value="Clone voice">
