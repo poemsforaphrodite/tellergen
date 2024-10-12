@@ -114,12 +114,19 @@ export default function Home() {
     console.log("handleGenerate called");
     setIsLoading(true);
     setError(null);
+
     try {
-      const endpoint = activeTab === "TTS" ? "/api/tts" : activeTab === "Talking Image" ? "/api/talking-image" : "/api/clone-voice";
+      const endpoint =
+        activeTab === "TTS"
+          ? "/api/tts"
+          : activeTab === "Talking Image"
+          ? "/api/talking-image"
+          : "/api/clone-voice";
+
       const formData = new FormData();
       formData.append("text", text);
       formData.append("voice", selectedVoice);
-      
+
       // Determine the language based on the selected category
       const language = selectedCategory.toLowerCase() === "hindi" ? "hi" : "en";
       formData.append("language", language);
@@ -128,105 +135,168 @@ export default function Home() {
         formData.append("audio_file", audioFile);
       }
 
-      // Calculate credits needed based on the length of the text
-      const creditsNeeded = text.length; // 1 credit per character
-      console.log(`Credits needed: ${creditsNeeded}`);
+      let creditsNeeded = 0;
 
-      // Fetch current credits
-      const creditsResponse = await fetch('/api/user/credits');
-      const creditsData = await creditsResponse.json();
-      console.log('Current credits data:', creditsData);
-
-      // Check credits based on the active tab
       if (activeTab === "TTS") {
-        // Check if TTS credits are available
-        if (creditsData['credits']['Text to Speech Pro'] >= creditsNeeded) {
-          console.log('Using TTS credits');
-          // Deduct from TTS credits
-          await fetch('/api/user/update-credits', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ creditsUsed: creditsNeeded, creditType: 'Text to Speech Pro' }),
-          });
-        } else if (creditsData['credits']['common'] >= creditsNeeded) {
-          console.log('Using common credits');
-          // Deduct from common credits if TTS credits are not sufficient
-          await fetch('/api/user/update-credits', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ creditsUsed: creditsNeeded }),
-          });
-        } else {
-          console.error("Not enough credits for TTS. Please purchase more credits to continue.");
-          throw new Error("Not enough credits for TTS. Please purchase more credits to continue.");
-        }
+        creditsNeeded = text.length; // 1 credit per character
       } else if (activeTab === "Talking Image") {
-        // Assuming 1 credit per 10 seconds for Talking Image
         const audioDuration = await getAudioDuration(audioFile);
-        const creditsNeededForImage = Math.ceil(audioDuration / 10); // 1 credit per 10 seconds
-
-        if (creditsData['credits']['common'] >= creditsNeededForImage) {
-          console.log('Using common credits for Talking Image');
-          // Deduct from common credits
-          await fetch('/api/user/update-credits', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ creditsUsed: creditsNeededForImage }),
-          });
-        } else {
-          console.error("Not enough credits for Talking Image. Please purchase more credits to continue.");
-          throw new Error("Not enough credits for Talking Image. Please purchase more credits to continue.");
-        }
+        creditsNeeded = Math.ceil(audioDuration / 10); // 1 credit per 10 seconds
       } else if (activeTab === "Clone voice") {
-        // Assuming Clone Voice uses Voice Cloning Pro credits
-        if (creditsData['credits']['Voice Cloning Pro'] >= creditsNeeded) {
-          console.log('Using Voice Cloning Pro credits');
-          // Deduct from Voice Cloning Pro credits
-          await fetch('/api/user/update-credits', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ creditsUsed: creditsNeeded, creditType: 'Voice Cloning Pro' }),
-          });
-        } else if (creditsData['credits']['common'] >= creditsNeeded) {
-          console.log('Using common credits for Clone Voice');
-          // Deduct from common credits if Voice Cloning Pro credits are not sufficient
-          await fetch('/api/user/update-credits', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ creditsUsed: creditsNeeded }),
-          });
+        creditsNeeded = text.length; // Assuming similar credit usage
+      }
+
+      if (isLoggedIn) {
+        console.log(`Credits needed: ${creditsNeeded}`);
+
+        // Fetch current credits
+        const creditsResponse = await fetch("/api/user/credits");
+        const creditsData = await creditsResponse.json();
+        console.log("Current credits data:", creditsData);
+
+        // Check and deduct credits based on the active tab
+        if (activeTab === "TTS") {
+          if (creditsData["credits"]["Text to Speech Pro"] >= creditsNeeded) {
+            console.log("Using TTS credits");
+            // Deduct from TTS credits
+            await fetch("/api/user/update-credits", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                creditsUsed: creditsNeeded,
+                creditType: "Text to Speech Pro",
+              }),
+            });
+          } else if (creditsData["credits"]["common"] >= creditsNeeded) {
+            console.log("Using common credits");
+            // Deduct from common credits if TTS credits are not sufficient
+            await fetch("/api/user/update-credits", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ creditsUsed: creditsNeeded }),
+            });
+          } else {
+            console.error(
+              "Not enough credits for TTS. Please purchase more credits to continue."
+            );
+            throw new Error(
+              "Not enough credits for TTS. Please purchase more credits to continue."
+            );
+          }
+        } else if (activeTab === "Talking Image") {
+          // Similar credit checks for other tabs...
+          if (creditsData["credits"]["Talking Image Pro"] >= creditsNeeded) {
+            console.log("Using Talking Image credits");
+            // Deduct from Talking Image Pro credits
+            await fetch("/api/user/update-credits", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                creditsUsed: creditsNeeded,
+                creditType: "Talking Image Pro",
+              }),
+            });
+          } else if (creditsData["credits"]["common"] >= creditsNeeded) {
+            console.log("Using common credits for Talking Image");
+            // Deduct from common credits
+            await fetch("/api/user/update-credits", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ creditsUsed: creditsNeeded }),
+            });
+          } else {
+            console.error(
+              "Not enough credits for Talking Image. Please purchase more credits to continue."
+            );
+            throw new Error(
+              "Not enough credits for Talking Image. Please purchase more credits to continue."
+            );
+          }
+        } else if (activeTab === "Clone voice") {
+          // Similar logic for Clone voice
+          if (creditsData["credits"]["Voice Cloning Pro"] >= creditsNeeded) {
+            console.log("Using Voice Cloning Pro credits");
+            // Deduct from Voice Cloning Pro credits
+            await fetch("/api/user/update-credits", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                creditsUsed: creditsNeeded,
+                creditType: "Voice Cloning Pro",
+              }),
+            });
+          } else if (creditsData["credits"]["common"] >= creditsNeeded) {
+            console.log("Using common credits for Clone Voice");
+            // Deduct from common credits if Voice Cloning Pro credits are not sufficient
+            await fetch("/api/user/update-credits", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ creditsUsed: creditsNeeded }),
+            });
+          } else {
+            console.error(
+              "Not enough credits for Clone Voice. Please purchase more credits to continue."
+            );
+            throw new Error(
+              "Not enough credits for Clone Voice. Please purchase more credits to continue."
+            );
+          }
+        }
+      } else {
+        // User is not logged in
+        if (activeTab === "TTS") {
+          // Optionally, enforce a character limit for non-logged-in users
+          if (text.length > 1000) { // Example limit
+            throw new Error("Text exceeds the maximum allowed length of 1000 characters.");
+          }
+          // Proceed without deducting credits
         } else {
-          console.error("Not enough credits for Clone Voice. Please purchase more credits to continue.");
-          throw new Error("Not enough credits for Clone Voice. Please purchase more credits to continue.");
+          // For other tabs, which require login, display error
+          throw new Error("You must be logged in to use this feature.");
         }
       }
 
+      // Proceed to send the request to generate audio/video
       const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
       });
 
       const result = await response.json();
-      console.log('Audio generation result:', result);
+      console.log("Generation result:", result);
 
-      if (response.ok && result.audioData) {
-        setGeneratedAudio(result.audioData);
+      if (response.ok) {
+        if (activeTab === "TTS" || activeTab === "Clone voice") {
+          if (result.audioData) {
+            setGeneratedAudio(result.audioData);
+          } else {
+            throw new Error(result.error || "Failed to generate audio.");
+          }
+        } else if (activeTab === "Talking Image") {
+          if (result.videoData) {
+            setGeneratedVideo(result.videoData);
+          } else {
+            throw new Error(result.error || "Failed to generate video.");
+          }
+        }
       } else {
-        console.error(result.error || "Failed to generate audio");
-        throw new Error(result.error || "Failed to generate audio");
+        console.error(result.error || "Generation failed.");
+        throw new Error(result.error || "Generation failed.");
       }
     } catch (error) {
-      console.error("Error generating audio:", error);
+      console.error("Error during generation:", error);
       setError((error as Error).message);
     } finally {
       setIsLoading(false);
@@ -625,12 +695,6 @@ export default function Home() {
                         )}
                       </div>
                     </div>
-                    
-                    <div className="bg-yellow-100 p-4 rounded-md">
-                      <p className="text-sm text-yellow-800">
-                        <strong>Note:</strong> Please do not use long paragraphs. Using long paragraphs may degrade the quality of voice. For longer text generation, use multiple paragraphs of 25 to 30 words each.
-                      </p>
-                    </div>
                   </div>
                 ) : (
                   <div className="p-4 bg-gray-100 rounded-md text-center">
@@ -729,6 +793,12 @@ export default function Home() {
                       <span className="text-sm text-gray-500">
                         {text.length} / {characterLimit}
                       </span>
+                    </div>
+                    
+                    <div className="bg-yellow-100 p-4 rounded-md">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Note:</strong> Please do not use long paragraphs. Using long paragraphs may degrade the quality of voice. For longer text generation, use multiple paragraphs of 25 to 30 words each.
+                      </p>
                     </div>
                   </div>
                 ) : (
