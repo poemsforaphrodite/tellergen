@@ -45,6 +45,10 @@ export default function Home() {
     voices: Array<{ name: string; free: boolean }>;
   }>>([])
 
+  const [defaultHindiText, setDefaultHindiText] = useState(
+    "यह डिफॉल्ट वाक्य है, जिसके माध्यम से आप वॉइस का परीक्षण कर सकते हैं। यहां वॉइस जेनरेट करते वक्त बेहतर परिणाम के लिए ज्यादा से ज्यादा पैराग्राफ का उपयोग करें और एक पैराग्राफ में बीस से पच्चीस शब्दों का ही उपयोग करें"
+  );
+
   useEffect(() => {
     fetchVoiceCategories()
   }, [])
@@ -110,6 +114,14 @@ export default function Home() {
     }
   }, [])
 
+  useEffect(() => {
+    if (selectedCategory.toLowerCase() === "hindi") {
+      setText(defaultHindiText);
+    } else {
+      setText(""); // Clear the text for other categories
+    }
+  }, [selectedCategory]);
+
   const handleGenerate = async () => {
     console.log("handleGenerate called");
     setIsLoading(true);
@@ -156,102 +168,57 @@ export default function Home() {
 
         // Check and deduct credits based on the active tab
         if (activeTab === "TTS") {
-          if (creditsData["credits"]["Text to Speech Pro"] >= creditsNeeded) {
-            console.log("Using TTS credits");
-            // Deduct from TTS credits
-            await fetch("/api/user/update-credits", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                creditsUsed: creditsNeeded,
-                creditType: "Text to Speech Pro",
-              }),
-            });
-          } else if (creditsData["credits"]["common"] >= creditsNeeded) {
-            console.log("Using common credits");
-            // Deduct from common credits if TTS credits are not sufficient
-            await fetch("/api/user/update-credits", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ creditsUsed: creditsNeeded }),
-            });
-          } else {
-            console.error(
-              "Not enough credits for TTS. Please purchase more credits to continue."
-            );
-            throw new Error(
-              "Not enough credits for TTS. Please purchase more credits to continue."
-            );
+          const updateCreditsResponse = await fetch("/api/user/update-credits", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              creditsUsed: creditsNeeded,
+              creditType: "Text to Speech Pro",
+              language: language
+            }),
+          });
+
+          if (!updateCreditsResponse.ok) {
+            const errorData = await updateCreditsResponse.json();
+            throw new Error(errorData.error || "Failed to update credits");
           }
         } else if (activeTab === "Talking Image") {
-          // Similar credit checks for other tabs...
-          if (creditsData["credits"]["Talking Image Pro"] >= creditsNeeded) {
-            console.log("Using Talking Image credits");
-            // Deduct from Talking Image Pro credits
-            await fetch("/api/user/update-credits", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                creditsUsed: creditsNeeded,
-                creditType: "Talking Image Pro",
-              }),
-            });
-          } else if (creditsData["credits"]["common"] >= creditsNeeded) {
-            console.log("Using common credits for Talking Image");
-            // Deduct from common credits
-            await fetch("/api/user/update-credits", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ creditsUsed: creditsNeeded }),
-            });
-          } else {
-            console.error(
-              "Not enough credits for Talking Image. Please purchase more credits to continue."
-            );
-            throw new Error(
-              "Not enough credits for Talking Image. Please purchase more credits to continue."
-            );
+          // Similar credit check for Talking Image
+          const updateCreditsResponse = await fetch("/api/user/update-credits", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              creditsUsed: creditsNeeded,
+              creditType: "Talking Image",
+              language: language
+            }),
+          });
+
+          if (!updateCreditsResponse.ok) {
+            const errorData = await updateCreditsResponse.json();
+            throw new Error(errorData.error || "Failed to update credits");
           }
         } else if (activeTab === "Clone voice") {
-          // Similar logic for Clone voice
-          if (creditsData["credits"]["Voice Cloning Pro"] >= creditsNeeded) {
-            console.log("Using Voice Cloning Pro credits");
-            // Deduct from Voice Cloning Pro credits
-            await fetch("/api/user/update-credits", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                creditsUsed: creditsNeeded,
-                creditType: "Voice Cloning Pro",
-              }),
-            });
-          } else if (creditsData["credits"]["common"] >= creditsNeeded) {
-            console.log("Using common credits for Clone Voice");
-            // Deduct from common credits if Voice Cloning Pro credits are not sufficient
-            await fetch("/api/user/update-credits", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ creditsUsed: creditsNeeded }),
-            });
-          } else {
-            console.error(
-              "Not enough credits for Clone Voice. Please purchase more credits to continue."
-            );
-            throw new Error(
-              "Not enough credits for Clone Voice. Please purchase more credits to continue."
-            );
+          // Similar credit check for Clone voice
+          const updateCreditsResponse = await fetch("/api/user/update-credits", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              creditsUsed: creditsNeeded,
+              creditType: "Voice Cloning Pro",
+              language: language
+            }),
+          });
+
+          if (!updateCreditsResponse.ok) {
+            const errorData = await updateCreditsResponse.json();
+            throw new Error(errorData.error || "Failed to update credits");
           }
         }
       } else {
