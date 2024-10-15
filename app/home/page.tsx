@@ -121,6 +121,11 @@ export default function Home() {
   }, [selectedCategory]);
 
   const handleGenerate = async () => {
+    if (!isLoggedIn) {
+      setError("Please log in to use this feature.");
+      return;
+    }
+
     console.log("handleGenerate called");
     setIsLoading(true);
     setError(null);
@@ -501,7 +506,15 @@ export default function Home() {
           <CardContent className="space-y-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-8 bg-indigo-100 p-1 rounded-lg">
-                <TabsTrigger value="TTS" className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all">
+                <TabsTrigger 
+                  value="TTS" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all"
+                  onClick={(e) => {
+                    if (!isLoggedIn) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
                   <MicIcon className="w-4 h-4 mr-2" />
                   TTS
                 </TabsTrigger>
@@ -532,68 +545,78 @@ export default function Home() {
               </TabsList>
               
               <TabsContent value="TTS">
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-lg font-semibold mb-2">Select voice</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="select-category" className="block text-sm font-medium text-gray-700 mb-1">
-                          Category
-                        </label>
-                        <select
-                          id="select-category"
-                          className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                          value={selectedCategory}
-                          onChange={(e) => setSelectedCategory(e.target.value)}
-                        >
-                          <option value="">Select a category</option>
-                          {voiceCategories.map((group) => (
-                            <option key={group._id} value={group.category}>
-                              {group.category}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      {selectedCategory && (
+                {isLoggedIn ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-lg font-semibold mb-2">Select voice</h2>
+                      <div className="space-y-4">
                         <div>
-                          <label htmlFor="select-voice" className="block text-sm font-medium text-gray-700 mb-1">
-                            Voice
+                          <label htmlFor="select-category" className="block text-sm font-medium text-gray-700 mb-1">
+                            Category
                           </label>
                           <select
-                            id="select-voice"
+                            id="select-category"
                             className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                            value={selectedVoice}
-                            onChange={(e) => setSelectedVoice(e.target.value)}
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
                           >
-                            <option value="">Select a voice</option>
-                            {voiceCategories.find(group => group.category === selectedCategory)?.voices.map((voice, index) => (
-                              <option key={index} value={voice.name} disabled={!isLoggedIn && !voice.free}>
-                                {voice.name} {!isLoggedIn && !voice.free ? '(Pro)' : ''}
+                            <option value="">Select a category</option>
+                            {voiceCategories.map((group) => (
+                              <option key={group._id} value={group.category}>
+                                {group.category}
                               </option>
                             ))}
                           </select>
                         </div>
-                      )}
+                        
+                        {selectedCategory && (
+                          <div>
+                            <label htmlFor="select-voice" className="block text-sm font-medium text-gray-700 mb-1">
+                              Voice
+                            </label>
+                            <select
+                              id="select-voice"
+                              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
+                              value={selectedVoice}
+                              onChange={(e) => setSelectedVoice(e.target.value)}
+                            >
+                              <option value="">Select a voice</option>
+                              {voiceCategories.find(group => group.category === selectedCategory)?.voices.map((voice, index) => (
+                                <option key={index} value={voice.name} disabled={!isLoggedIn && !voice.free}>
+                                  {voice.name} {!isLoggedIn && !voice.free ? '(Pro)' : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <Textarea
+                      placeholder="Type your text here..."
+                      className="min-h-[200px] resize-none"
+                      value={text}
+                      onChange={(e) => setText(e.target.value.slice(0, characterLimit))}
+                      maxLength={characterLimit}
+                    />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">
+                        {isLoggedIn ? null : "Login for 5000 character limit"}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {text.length} / {characterLimit}
+                      </span>
                     </div>
                   </div>
-                  
-                  <Textarea
-                    placeholder="Type your text here..."
-                    className="min-h-[200px] resize-none"
-                    value={text}
-                    onChange={(e) => setText(e.target.value.slice(0, characterLimit))}
-                    maxLength={characterLimit}
-                  />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">
-                      {isLoggedIn ? null : "Login for 5000 character limit"}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {text.length} / {characterLimit}
-                    </span>
+                ) : (
+                  <div className="p-4 bg-gray-100 rounded-md text-center">
+                    <p className="text-lg font-semibold mb-2">Pro Feature</p>
+                    <p className="text-gray-600 mb-4">Please log in to access the Text-to-Speech feature.</p>
+                    <Link href="/login">
+                      <Button variant="default">Log In</Button>
+                    </Link>
                   </div>
-                </div>
+                )}
               </TabsContent>
               
               <TabsContent value="Talking Image">
@@ -783,7 +806,7 @@ export default function Home() {
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
               size="lg" 
               onClick={activeTab === "Talking Image" ? handleGenerateTalkingImage : handleGenerate} 
-              disabled={isLoading || (activeTab === "Clone voice" && !audioFile) || (activeTab === "Talking Image" && (!imageFile || !audioFile))}
+              disabled={isLoading || !isLoggedIn || (activeTab === "Clone voice" && !audioFile) || (activeTab === "Talking Image" && (!imageFile || !audioFile))}
             >
               {isLoading ? (
                 <>
