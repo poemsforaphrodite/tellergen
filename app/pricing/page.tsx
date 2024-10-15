@@ -17,7 +17,8 @@ export default function PricingPage() {
         "100+ Premium and Celebrity voices",
         "High quality audio download",
         "Ultra realistic voices",
-        "1 million characters"
+        "1 million characters",
+        "Unlimited Hindi characters"
       ]
     },
     {

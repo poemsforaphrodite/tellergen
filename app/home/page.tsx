@@ -607,10 +607,17 @@ export default function Home() {
                         {text.length} / {characterLimit}
                       </span>
                     </div>
+                    
+                    {selectedCategory.toLowerCase() === "hindi" && (
+                      <div className="bg-yellow-100 p-4 rounded-md">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Note:</strong> Please do not use long paragraphs. Using long paragraphs may degrade the quality of voice. For longer text generation, use multiple paragraphs of 25 to 30 words each.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="p-4 bg-gray-100 rounded-md text-center">
-                    <p className="text-lg font-semibold mb-2">Pro Feature</p>
                     <p className="text-gray-600 mb-4">Please log in to access the Text-to-Speech feature.</p>
                     <Link href="/login">
                       <Button variant="default">Log In</Button>
@@ -686,7 +693,6 @@ export default function Home() {
                   </div>
                 ) : (
                   <div className="p-4 bg-gray-100 rounded-md text-center">
-                    <p className="text-lg font-semibold mb-2">Pro Feature</p>
                     <p className="text-gray-600 mb-4">Please log in to access the Talking Image feature.</p>
                     <Link href="/login">
                       <Button variant="default">Log In</Button>
@@ -782,16 +788,9 @@ export default function Home() {
                         {text.length} / {characterLimit}
                       </span>
                     </div>
-                    
-                    <div className="bg-yellow-100 p-4 rounded-md">
-                      <p className="text-sm text-yellow-800">
-                        <strong>Note:</strong> Please do not use long paragraphs. Using long paragraphs may degrade the quality of voice. For longer text generation, use multiple paragraphs of 25 to 30 words each.
-                      </p>
-                    </div>
                   </div>
                 ) : (
                   <div className="p-4 bg-gray-100 rounded-md text-center">
-                    <p className="text-lg font-semibold mb-2">Pro Feature</p>
                     <p className="text-gray-600 mb-4">Please log in to access the Clone voice feature.</p>
                     <Link href="/login">
                       <Button variant="default">Log In</Button>
@@ -895,10 +894,30 @@ export default function Home() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
-                { title: "TellerGen Text to Speech Pro", price: 499, features: ["100+ Premium and Celebrity voices", "High quality audio download", "Ultra realistic voices", "1 million characters"] },
-                { title: "TellerGen Voice Cloning Pro", price: 499, features: ["Clone up to 1 million characters", "High quality audio", "Ultra realistic cloned voice"] },
-                { title: "TellerGen Talking Image Pro", price: 799, features: ["Up to 600 minutes of video generation", "High quality image to video", "Realistic head movement", "Perfect lip syncing"] },
-                { title: "TellerGen Combo Pack", price: 999, features: ["Text to Speech Pro", "Talking Image Pro", "Voice Cloning Pro", "Best value for all features"] }
+                { title: "TellerGen Text to Speech Pro", price: 499, features: [
+                  "100+ Premium and Celebrity voices",
+                  "High quality audio download",
+                  "Ultra realistic voices",
+                  "1 million characters",
+                  "Unlimited Hindi characters" // Added this new feature
+                ]},
+                { title: "TellerGen Voice Cloning Pro", price: 499, features: [
+                  "Clone up to 1 million characters",
+                  "High quality audio",
+                  "Ultra realistic cloned voice"
+                ]},
+                { title: "TellerGen Talking Image Pro", price: 799, features: [
+                  "Up to 600 minutes of video generation",
+                  "High quality image to video",
+                  "Realistic head movement",
+                  "Perfect lip syncing"
+                ]},
+                { title: "TellerGen Combo Pack", price: 999, features: [
+                  "Text to Speech Pro",
+                  "Talking Image Pro",
+                  "Voice Cloning Pro",
+                  "Best value for all features"
+                ]}
               ].map((plan, index) => (
                 <div key={index} className="bg-indigo-50 p-6 rounded-lg shadow-md space-y-4">
                   <h3 className="text-xl font-semibold text-indigo-800">{plan.title}</h3>

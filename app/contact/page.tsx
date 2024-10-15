@@ -55,7 +55,7 @@ export default function ContactPage() {
                 <p className="text-gray-700">If you are experiencing issues with our Text-to-Speech, Talking Image, or Voice Cloning services:</p>
                 <p className="text-gray-700">Email: support@tellergen.com</p>
                 <p className="text-gray-700">Phone: +91 9244039177</p>
-                <p className="text-gray-700">Support Hours: Monday - Friday, 9:00 AM - 5:00 PM [Insert Time Zone]</p>
+                <p className="text-gray-700">Support Hours: Monday - Friday, 9:00 AM - 5:00 PM IST </p>
                 <p className="text-gray-700">For faster assistance, please include your account or subscription ID, a detailed description of the issue, and screenshots or error messages (if applicable).</p>
               </div>
               
@@ -68,7 +68,7 @@ export default function ContactPage() {
               
               <div>
                 <h4 className="font-semibold text-indigo-700">Business Address</h4>
-                <p className="text-gray-700">Ward no. 11, Baaikunthpur, Chhattisgaarh 497335</p>
+                <p className="text-gray-700">Ward no. 11, Baikunthpur, Chhattisgaarh 497335</p>
               </div>
             </div>
             
