@@ -132,19 +132,22 @@ export async function POST(request: Request) {
 
   // Send the payment initiation request to PhonePe API
   try {
-    const response = await fetch(
-      'https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-VERIFY': calculatedChecksum,
-          Accept: 'application/json',
-          'X-MERCHANT-ID': merchantId,
-        },
-        body: JSON.stringify({ request: modifiedPayload }),
-      }
-    );
+    const apiUrl = 'https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay';
+    console.log('Sending request to:', apiUrl);
+
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-VERIFY': calculatedChecksum,
+        Accept: 'application/json',
+        'X-MERCHANT-ID': merchantId,
+      },
+      body: JSON.stringify({ request: modifiedPayload }),
+    };
+    console.log('Request options:', JSON.stringify(requestOptions, null, 2));
+
+    const response = await fetch(apiUrl, requestOptions);
 
     console.log('PhonePe API response status:', response.status);
     const data = await response.json();
@@ -166,6 +169,9 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error('Error initiating payment:', error);
+    if (error instanceof TypeError && error.message === 'fetch failed') {
+      console.error('Network error occurred. Please check your internet connection and the API endpoint.');
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'An unexpected error occurred' },
       { status: 500 }
