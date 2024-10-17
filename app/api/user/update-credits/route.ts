@@ -23,11 +23,6 @@ export async function POST(request: Request) {
   try {
     const { creditsUsed, creditType, language } = await request.json()
 
-    // If the language is Hindi, don't deduct any credits
-    if (language === 'hi') {
-      return NextResponse.json({ success: true, message: 'No credits deducted for Hindi voice' })
-    }
-
     const user = await User.findById(userId)
 
     if (!user) {
@@ -37,10 +32,24 @@ export async function POST(request: Request) {
     const updateQuery: UpdateQuery = {};
 
     if (creditType === 'Text to Speech Pro') {
-      if (user.textToSpeechCharacters < creditsUsed) {
-        return NextResponse.json({ error: 'Insufficient Text to Speech Pro credits' }, { status: 400 })
+      if (language === 'hi') {
+        // For Hindi, only deduct if creditsUsed is <= 1000
+        if (creditsUsed <= 1000) {
+          if (user.textToSpeechCharacters < creditsUsed) {
+            return NextResponse.json({ error: 'Insufficient Text to Speech Pro credits' }, { status: 400 })
+          }
+          updateQuery['textToSpeechCharacters'] = -creditsUsed;
+        } else {
+          // If creditsUsed > 1000, don't deduct any credits
+          return NextResponse.json({ success: true, message: 'No credits deducted for Hindi voice over 1000 characters' })
+        }
+      } else {
+        // For non-Hindi languages, proceed as before
+        if (user.textToSpeechCharacters < creditsUsed) {
+          return NextResponse.json({ error: 'Insufficient Text to Speech Pro credits' }, { status: 400 })
+        }
+        updateQuery['textToSpeechCharacters'] = -creditsUsed;
       }
-      updateQuery['textToSpeechCharacters'] = -creditsUsed;
     } else if (creditType === 'Voice Cloning Pro') {
       if (user.voiceCloningCharacters < creditsUsed) {
         return NextResponse.json({ error: 'Insufficient Voice Cloning Pro credits' }, { status: 400 })
@@ -58,13 +67,17 @@ export async function POST(request: Request) {
       updateQuery['credits'] = -creditsUsed;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $inc: updateQuery },
-      { new: true, select: 'credits textToSpeechCharacters voiceCloningCharacters talkingImageMinutes' }
-    )
-
-    return NextResponse.json({ success: true, credits: updatedUser })
+    // Only update the user if there are credits to deduct
+    if (Object.keys(updateQuery).length > 0) {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $inc: updateQuery },
+        { new: true, select: 'credits textToSpeechCharacters voiceCloningCharacters talkingImageMinutes' }
+      )
+      return NextResponse.json({ success: true, credits: updatedUser })
+    } else {
+      return NextResponse.json({ success: true, message: 'No credits deducted' })
+    }
   } catch (error) {
     console.error('Error updating user credits:', error)
     return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 })

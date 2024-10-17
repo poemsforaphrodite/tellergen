@@ -45,7 +45,7 @@ export default function Home() {
     voices: Array<{ name: string; free: boolean }>;
   }>>([])
 
-  const defaultHindiText = "यह डिफॉल्ट वाक्य है, जिसके माध्यम से आप वॉइस का परीक्षण कर सकते हैं। यहां वॉइस जेनरेट करते वक्त बेहतर परिणाम के लिए ज्यादा से ज्यादा पैराग्राफ का उपयोग करें और एक पैराग्राफ में बीस से पच्चीस शब्दों का ही उपयोग करें";
+  const defaultHindiText = "यह डिफ़ॉल्ट हिंदी पाठ है। आप इसका उपयोग वॉइस का परीक्षण करने के लिए कर सकते हैं। बेहतर परिणाम के लिए, कृपया छोटे-छोटे पैराग्राफ़ का उपयोग करें। प्रत्येक पैराग्राफ़ में लगभग बीस से पच्चीस शब्द रखें। यह आपकी आवाज की गुणवत्ता को बनाए रखने में मदद करेगा।";
 
   useEffect(() => {
     fetchVoiceCategories()
@@ -113,12 +113,14 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (selectedCategory.toLowerCase() === "hindi") {
+    if (activeTab === "Clone voice") {
+      setText(""); // Clear text when switching to Clone voice tab
+    } else if (selectedCategory.toLowerCase() === "hindi") {
       setText(defaultHindiText);
     } else {
       setText(""); // Clear the text for other categories
     }
-  }, [selectedCategory]);
+  }, [activeTab, selectedCategory]);
 
   const handleGenerate = async () => {
     if (!isLoggedIn) {
@@ -504,7 +506,12 @@ export default function Home() {
             <CardTitle className="text-3xl font-bold text-indigo-800">Voice Generation</CardTitle>
           </CardHeader>
           <CardContent className="space-y-8">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={(value) => {
+              setActiveTab(value);
+              if (value === "Clone voice") {
+                setText(""); // Clear text when switching to Clone voice tab
+              }
+            }} className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-8 bg-indigo-100 p-1 rounded-lg">
                 <TabsTrigger 
                   value="TTS" 
