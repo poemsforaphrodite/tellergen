@@ -32,34 +32,33 @@ export async function POST(request: Request) {
     const updateQuery: UpdateQuery = {};
 
     if (creditType === 'Text to Speech Pro') {
-      if (language === 'hi') {
-        // For Hindi, only deduct if creditsUsed is <= 1000
-        if (creditsUsed <= 1000) {
-          if (user.textToSpeechCharacters < creditsUsed) {
-            return NextResponse.json({ error: 'Insufficient Text to Speech Pro credits' }, { status: 400 })
-          }
-          updateQuery['textToSpeechCharacters'] = -creditsUsed;
-        } else {
-          // If creditsUsed > 1000, don't deduct any credits
-          return NextResponse.json({ success: true, message: 'No credits deducted for Hindi voice over 1000 characters' })
-        }
-      } else {
-        // For non-Hindi languages, proceed as before
-        if (user.textToSpeechCharacters < creditsUsed) {
-          return NextResponse.json({ error: 'Insufficient Text to Speech Pro credits' }, { status: 400 })
-        }
+      if (language === 'hi' && creditsUsed > 1000) {
+        return NextResponse.json({ success: true, message: 'No credits deducted for Hindi voice over 1000 characters' })
+      }
+      
+      if (user.textToSpeechCharacters >= creditsUsed) {
         updateQuery['textToSpeechCharacters'] = -creditsUsed;
+      } else if (user.credits >= creditsUsed) {
+        updateQuery['credits'] = -creditsUsed;
+      } else {
+        return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
       }
     } else if (creditType === 'Voice Cloning Pro') {
-      if (user.voiceCloningCharacters < creditsUsed) {
-        return NextResponse.json({ error: 'Insufficient Voice Cloning Pro credits' }, { status: 400 })
+      if (user.voiceCloningCharacters >= creditsUsed) {
+        updateQuery['voiceCloningCharacters'] = -creditsUsed;
+      } else if (user.credits >= creditsUsed) {
+        updateQuery['credits'] = -creditsUsed;
+      } else {
+        return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
       }
-      updateQuery['voiceCloningCharacters'] = -creditsUsed;
     } else if (creditType === 'Talking Image') {
-      if (user.talkingImageMinutes < creditsUsed) {
-        return NextResponse.json({ error: 'Insufficient Talking Image Pro credits' }, { status: 400 })
+      if (user.talkingImageMinutes >= creditsUsed) {
+        updateQuery['talkingImageMinutes'] = -creditsUsed;
+      } else if (user.credits >= creditsUsed) {
+        updateQuery['credits'] = -creditsUsed;
+      } else {
+        return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
       }
-      updateQuery['talkingImageMinutes'] = -creditsUsed;
     } else {
       if (user.credits < creditsUsed) {
         return NextResponse.json({ error: 'Insufficient common credits' }, { status: 400 })
