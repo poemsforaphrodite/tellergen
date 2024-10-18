@@ -30,7 +30,7 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      dbName: 'mitra', // Add this line to specify the database name
+      dbName: 'mitra', // Ensure this is the correct database name
     };
 
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {

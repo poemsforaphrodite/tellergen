@@ -41,7 +41,7 @@ const UserSchema: Schema = new Schema({
   credits: { type: Number, default: 1000 },
   textToSpeechCharacters: { type: Number, default: 1000 },
   voiceCloningCharacters: { type: Number, default: 1000 },
-  talkingImageCharacters: { type: Number, default: 1000 }, // Changed from talkingImageMinutes to talkingImageCharacters
+  talkingImageCharacters: { type: Number, default: 100 }, // Changed default to 100
   subscriptions: {
     type: Map,
     of: Boolean,

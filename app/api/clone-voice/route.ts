@@ -1,45 +1,102 @@
 import { NextResponse } from 'next/server'
-import { Client } from '@gradio/client'
 
-export async function POST(request: Request) {
-  const formData = await request.formData()
-  const text = formData.get('text') as string
-  const audioFile = formData.get('audio_file') as File
+// Replicate API Configuration
+const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+const REPLICATE_API_URL = 'https://api.replicate.com/v1/predictions';
 
-  console.log('Received request:', { text, audioFile: audioFile?.name })
+async function getBase64FromFile(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const base64 = Buffer.from(uint8Array).toString('base64');
+  return `data:${file.type};base64,${base64}`;
+}
 
+async function waitForReplicateJob(jobId: string): Promise<any> {
+  const maxAttempts = 60; // Maximum number of attempts (10 minutes with 10-second intervals)
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    const response = await fetch(`${REPLICATE_API_URL}/${jobId}`, {
+      headers: {
+        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (result.status === 'succeeded') {
+      return result;
+    } else if (result.status === 'failed') {
+      throw new Error('Job failed: ' + (result.error || 'Unknown error'));
+    }
+
+    // Wait for 10 seconds before the next attempt
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    attempts++;
+  }
+
+  throw new Error('Job timed out');
+}
+
+export async function POST(request: Request): Promise<NextResponse> {
   try {
-    const client = await Client.connect("nikkmitra/clone")
-    console.log('Connected to Gradio client')
+    const formData = await request.formData()
+    const text = formData.get('text') as string
+    const audioFile = formData.get('audio_file') as File | null
 
-    const result = await client.predict("/clone_voice", {
-      text,
-      audio_file: audioFile,
-      language: "en",
-    })
+    if (!text || !audioFile) {
+      console.error('Missing text or audio file in the request.');
+      return NextResponse.json({ error: "Missing text or audio file." }, { status: 400 })
+    }
 
-    console.log('Gradio prediction result:', result)
+    console.log('Received request:', { text, audioFile: audioFile.name })
 
-    if (result && result.data && result.data[0] && result.data[0].url) {
-      const audioUrl = result.data[0].url
-      
-      // Download the audio file
-      const audioResponse = await fetch(audioUrl)
-      if (!audioResponse.ok) {
-        throw new Error(`Failed to download audio: ${audioResponse.statusText}`)
-      }
-      const audioBlob = await audioResponse.blob()
+    const audioBase64 = await getBase64FromFile(audioFile);
 
-      // Convert blob to base64
-      const buffer = Buffer.from(await audioBlob.arrayBuffer())
-      const base64Audio = buffer.toString('base64')
+    console.log('Preparing Replicate API request')
 
-      return NextResponse.json({ audioData: `data:audio/wav;base64,${base64Audio}` })
+    const response = await fetch(REPLICATE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: "684bc3855b37866c0c65add2ff39c78f3dea3f4ff103a436465326e0f438d55e",
+        input: {
+          speaker: audioBase64,
+          text: text,
+          language: "en",
+          cleanup_voice: false
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const initialResult = await response.json();
+    console.log('Initial Replicate response:', initialResult);
+
+    // Wait for the job to complete
+    const finalResult = await waitForReplicateJob(initialResult.id);
+    console.log('Final Replicate result:', finalResult);
+
+    if (finalResult.output && typeof finalResult.output === 'string' && finalResult.output.startsWith('http')) {
+      console.log('Returning audio URL:', finalResult.output);
+      return NextResponse.json({ audioUrl: finalResult.output });
     } else {
-      throw new Error("Failed to clone voice: No data in result")
+      console.error('Invalid output from Replicate:', finalResult);
+      throw new Error("Failed to clone voice: Invalid output from Replicate");
     }
   } catch (error) {
-    console.error("Error in Clone Voice API:", error)
-    return NextResponse.json({ error: "Failed to clone voice: " + (error as Error).message }, { status: 500 })
+    console.error("Error in Clone Voice API:", error);
+    return NextResponse.json({ error: "Failed to clone voice: " + (error as Error).message }, { status: 500 });
   }
 }

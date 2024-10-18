@@ -4,7 +4,8 @@ const VoiceCategorySchema = new mongoose.Schema({
   category: String,
   voices: [{
     name: String,
-    free: Boolean
+    free: Boolean,
+    base64: String
   }]
 }, { collection: 'voices' }) // Change the collection name to 'voices'
 

@@ -92,22 +92,17 @@ export async function POST(request: Request) {
       console.log(`Normalized productName: "${normalizedProductName}"`);
       console.log(`Expected PRODUCTS.CREDITS_1000: "${PRODUCTS.CREDITS_1000.toLowerCase()}"`);
 
-      const charactersToAdd = 1000000; // For Pro Plans and Combo Pack
+      const charactersToAdd = 1000000; // For Text-to-Speech Pro and Voice Cloning Pro
 
-      if (productName === PRODUCTS.COMBO_PACK) {
-        user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
-        user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
-        user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 600; // Adjust as needed
-        console.log(`User Combo Pack features updated: +${charactersToAdd} characters for TTS and Voice Cloning, +600 for Talking Image`);
-      } else if (productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
+      if (productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
         user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
         console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
       } else if (productName === PRODUCTS.VOICE_CLONING_PRO) {
         user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
         console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
       } else if (productName === PRODUCTS.TALKING_IMAGE_PRO) {
-        user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 600; // Ensure it adds the correct characters
-        console.log(`User Talking Image characters updated: +600 characters`);
+        user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 360; // Updated to 3600 (60 minutes * 60 seconds)
+        console.log(`User Talking Image characters updated: +360 characters`);
       } else if (normalizedProductName === PRODUCTS.CREDITS_1000.toLowerCase()) {
         creditsToAdd = 1000;
         console.log(`User received ${creditsToAdd} credits`);
@@ -138,8 +133,8 @@ export async function POST(request: Request) {
       const creditUrl = new URL('/credit', baseUrl);
       creditUrl.searchParams.set('paymentSuccess', 'true');
 
-      if (roundedBaseAmount === 499) {
-        creditUrl.searchParams.set('characters', '1000000');
+      if (roundedBaseAmount === 499 || roundedBaseAmount === 999) {
+        creditUrl.searchParams.set('characters', roundedBaseAmount === 999 ? '360' : '1000000');
         creditUrl.searchParams.set('product', transaction.productName);
       } else if (creditsToAdd !== undefined) {
         creditUrl.searchParams.set('credits', creditsToAdd.toString());

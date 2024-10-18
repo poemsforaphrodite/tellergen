@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       credits: 1000, // Set default common credits to 1000
       textToSpeechCharacters: 1000, // Set default Text to Speech Pro credits to 1000
       voiceCloningCharacters: 1000, // Set default Voice Cloning Pro credits to 1000
-      talkingImageCharacters: 1000 // Set default Talking Image credits to 1000
+      talkingImageCharacters: 100 // Set default Talking Image credits to 1000
     });
 
     await newUser.save();
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       credits: 1000, 
       textToSpeechCharacters: 1000, 
       voiceCloningCharacters: 1000, 
-      talkingImageCharacters: 1000 
+      talkingImageCharacters: 100 
     });
 
     return NextResponse.json({ success: true, message: 'User registered successfully' });

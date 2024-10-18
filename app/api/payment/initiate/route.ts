@@ -132,7 +132,7 @@ export async function POST(request: Request) {
 
   // Send the payment initiation request to PhonePe API
   try {
-    // Update the API URL to production
+    // Update the API URL to use the production endpoint
     const apiUrl = 'https://api.phonepe.com/apis/hermes/pg/v1/pay';
     console.log('Sending request to:', apiUrl);
 

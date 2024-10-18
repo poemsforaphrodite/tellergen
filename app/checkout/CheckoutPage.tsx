@@ -38,7 +38,7 @@ export default function CheckoutPage() {
           price = 499; // Set price for Voice Cloning Pro
         } else if (productQueryName.toLowerCase().includes('talking_image_pro')) {
           mappedProductName = PRODUCTS.TALKING_IMAGE_PRO;
-          price = 499; // Set price for Talking Image Pro
+          price = 999; // Updated price for Talking Image Pro
         } else if (productQueryName.toLowerCase().includes('combo_pack')) {
           mappedProductName = PRODUCTS.COMBO_PACK;
           price = 999; // Set price for Combo Pack

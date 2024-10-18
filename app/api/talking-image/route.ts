@@ -1,7 +1,58 @@
 import { NextResponse } from 'next/server'
-import { Client } from '@gradio/client'
+import { getUserIdFromRequest } from '@/lib/auth'
+import User from '@/models/User'
+import dbConnect from '@/lib/mongodb'
+
+const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+const REPLICATE_API_URL = 'https://api.replicate.com/v1/predictions';
+
+async function getBase64FromFile(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  return buffer.toString('base64');
+}
+
+async function waitForReplicateJob(jobId: string): Promise<any> {
+  const maxAttempts = 60; // Maximum number of attempts (10 minutes with 10-second intervals)
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    const response = await fetch(`${REPLICATE_API_URL}/${jobId}`, {
+      headers: {
+        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (result.status === 'succeeded') {
+      return result;
+    } else if (result.status === 'failed') {
+      throw new Error('Job failed: ' + (result.error || 'Unknown error'));
+    }
+
+    // Wait for 10 seconds before the next attempt
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    attempts++;
+  }
+
+  throw new Error('Job timed out');
+}
 
 export async function POST(request: Request) {
+  await dbConnect()
+
+  const userId = getUserIdFromRequest()
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const formData = await request.formData()
   const image = formData.get('image') as File
   const audio = formData.get('audio') as File
@@ -9,53 +60,64 @@ export async function POST(request: Request) {
   console.log('Received request:', { image: image?.name, audio: audio?.name })
 
   try {
-    // Update the client connection to use the correct space
-    const client = await Client.connect("nikkmitra/talking_image")
-    console.log('Connected to Gradio client')
+    // Get user
+    const user = await User.findById(userId)
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
-    // Update the prediction call with the correct API name and parameters
-    const result = await client.predict("/generate_video", [
-      image,
-      audio,
-      "hubert_audio_only", // infer_type
-      0, // pose_yaw
-      0, // pose_pitch
-      0, // pose_roll
-      0.5, // face_location
-      0.5, // face_scale
-      50, // step_T
-      true, // face_sr
-      0, // seed
-    ])
+    const imageBase64 = await getBase64FromFile(image);
+    const audioBase64 = await getBase64FromFile(audio);
 
-    console.log('Gradio prediction result:', JSON.stringify(result, null, 2))
-
-    if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
-      const videoData = result.data[1]?.value?.video // Using the second item (index 1) which contains the SR video
-      
-      if (videoData && videoData.url) {
-        const videoUrl = videoData.url
-        
-        // Download the video file
-        const videoResponse = await fetch(videoUrl)
-        if (!videoResponse.ok) {
-          throw new Error(`Failed to download video: ${videoResponse.statusText}`)
+    const response = await fetch(REPLICATE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: "a519cc0cfebaaeade068b23899165a11ec76aaa1d2b313d40d214f204ec957a3",
+        input: {
+          driven_audio: `data:audio/wav;base64,${audioBase64}`,
+          source_image: `data:image/png;base64,${imageBase64}`,
+          use_enhancer: true
         }
-        const videoBlob = await videoResponse.blob()
+      })
+    });
 
-        // Convert blob to base64
-        const buffer = Buffer.from(await videoBlob.arrayBuffer())
-        const base64Video = buffer.toString('base64')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-        return NextResponse.json({ videoData: `data:video/mp4;base64,${base64Video}` })
-      }
+    const initialResult = await response.json();
+    console.log('Initial Replicate API response:', initialResult);
+
+    // Wait for the job to complete
+    const finalResult = await waitForReplicateJob(initialResult.id);
+    console.log('Final Replicate API response:', finalResult);
+
+    if (finalResult.status === 'succeeded' && finalResult.output) {
+      const videoUrl = finalResult.output;
       
-      throw new Error("Unexpected video data format")
+      // Download the video file
+      const videoResponse = await fetch(videoUrl);
+      if (!videoResponse.ok) {
+        throw new Error(`Failed to download video: ${videoResponse.statusText}`);
+      }
+      const videoBlob = await videoResponse.blob();
+
+      // Convert blob to base64
+      const buffer = Buffer.from(await videoBlob.arrayBuffer());
+      const base64Video = buffer.toString('base64');
+
+      return NextResponse.json({ 
+        videoData: `data:video/mp4;base64,${base64Video}`
+      });
     } else {
-      throw new Error("Failed to generate talking image video: No data in result")
+      throw new Error("Failed to generate talking image video: " + (finalResult.error || "Unknown error"));
     }
   } catch (error) {
-    console.error("Error in Talking Image API:", error)
-    return NextResponse.json({ error: "Failed to generate talking image video: " + (error as Error).message }, { status: 500 })
+    console.error("Error in Talking Image API:", error);
+    return NextResponse.json({ error: "Failed to generate talking image video: " + (error as Error).message }, { status: 500 });
   }
 }

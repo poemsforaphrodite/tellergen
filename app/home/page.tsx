@@ -15,6 +15,13 @@ import Image from 'next/image'
 // Update the type definition
 type CustomMediaRecorder = MediaRecorder & { intervalId?: NodeJS.Timeout };
 
+// Update the type definition for voice categories
+type VoiceCategory = {
+  _id: string;
+  category: string;
+  voices: Array<{ name: string; file_url: string; is_free: boolean }>;
+};
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
   const [text, setText] = useState("")
@@ -39,32 +46,47 @@ export default function Home() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
-  const [voiceCategories, setVoiceCategories] = useState<Array<{
-    _id: string;
-    category: string;
-    voices: Array<{ name: string; free: boolean }>;
-  }>>([])
+  const [voiceCategories, setVoiceCategories] = useState<VoiceCategory[]>([]);
+  const [userTTSCredits, setUserTTSCredits] = useState<number>(0);
 
   const defaultHindiText = "यह डिफ़ॉल्ट हिंदी पाठ है। आप इसका उपयोग वॉइस का परीक्षण करने के लिए कर सकते हैं। बेहतर परिणाम के लिए, कृपया छोटे-छोटे पैराग्राफ़ का उपयोग करें। प्रत्येक पैराग्राफ़ में लगभग बीस से पच्चीस शब्द रखें। यह आपकी आवाज की गुणवत्ता को बनाए रखने में मदद करेगा।";
 
   useEffect(() => {
-    fetchVoiceCategories()
-  }, [])
+    console.log('Fetching voice categories...');
+    fetchVoiceCategories();
+    fetchUserCredits();
+  }, []);
 
   const fetchVoiceCategories = async () => {
     try {
-      const response = await fetch('/api/voice-categories')
-      const data = await response.json()
+      const response = await fetch('/api/voice-categories');
+      const data = await response.json();
+      
+      console.log('Fetched voice categories:', data); // Add this line
       
       if (response.ok) {
-        setVoiceCategories(data)
+        setVoiceCategories(data);
       } else {
-        // Handle error silently or update state to show error message
+        console.error('Error fetching voice categories:', data.error); // Add this line
       }
     } catch (error) {
-      // Handle error silently or update state to show error message
+      console.error('Error fetching voice categories:', error); // Add this line
     }
-  }
+  };
+
+  const fetchUserCredits = async () => {
+    try {
+      const response = await fetch('/api/user/credits');
+      const data = await response.json();
+      if (response.ok) {
+        setUserTTSCredits(data.credits['Text to Speech Pro']);
+      } else {
+        console.error('Error fetching user credits:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching user credits:', error);
+    }
+  };
 
   useEffect(() => {
     checkLoginStatus()
@@ -240,21 +262,25 @@ export default function Home() {
         }
       }
 
-      // Proceed to send the request to generate audio/video
+      console.log("Sending request to:", endpoint);
       const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
       });
-
+      console.log("Response:", response);
+      console.log("Response status:", response.status);
       const result = await response.json();
       console.log("Generation result:", result);
-
+      
       if (response.ok) {
+        console.log("Response is OK");
         if (activeTab === "TTS" || activeTab === "Clone voice") {
-          if (result.audioData) {
-            setGeneratedAudio(result.audioData);
+          if (result && typeof result === 'object' && 'audioUrl' in result) {
+            console.log("Setting generated audio URL:", result.audioUrl);
+            setGeneratedAudio(result.audioUrl);
           } else {
-            throw new Error(result.error || "Failed to generate audio.");
+            console.error("Unexpected response format:", result);
+            throw new Error("Failed to generate audio: Unexpected response format");
           }
         } else if (activeTab === "Talking Image") {
           if (result.videoData) {
@@ -264,12 +290,12 @@ export default function Home() {
           }
         }
       } else {
-        console.error(result.error || "Generation failed.");
-        throw new Error(result.error || "Generation failed.");
+        console.error("Response not OK:", response.status, result);
+        throw new Error(result.error || "Generation failed");
       }
     } catch (error) {
       console.error("Error during generation:", error);
-      setError((error as Error).message);
+      setError((error as Error).message || "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -388,8 +414,8 @@ export default function Home() {
       const creditsResponse = await fetch('/api/user/credits')
       const creditsData = await creditsResponse.json()
       
-      if (creditsData.credits < creditsNeeded) {
-        throw new Error("Not enough credits. Please purchase more credits to continue.")
+      if (creditsData.credits['Talking Image'] < creditsNeeded) {
+        throw new Error(`Not enough credits. You have ${creditsData.credits['Talking Image']} credits, but need ${creditsNeeded} credits.`)
       }
 
       const response = await fetch("/api/talking-image", {
@@ -408,11 +434,16 @@ export default function Home() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ creditsUsed: creditsNeeded }),
+          body: JSON.stringify({ 
+            creditsUsed: creditsNeeded,
+            creditType: 'Talking Image'
+          }),
         })
         
         if (!updateCreditsResponse.ok) {
-          console.error("Failed to update credits")
+          const errorData = await updateCreditsResponse.json()
+          console.error("Failed to update credits:", errorData)
+          setError(`Failed to update credits: ${errorData.error}. Available: ${errorData.available}, Required: ${errorData.required}`)
         }
       } else {
         throw new Error(result.error || "Failed to generate talking image video")
@@ -445,8 +476,8 @@ export default function Home() {
   }
 
   useEffect(() => {
-   // console.log('voiceCategories updated:', voiceCategories)
-  }, [voiceCategories])
+    console.log('Voice categories updated:', voiceCategories);
+  }, [voiceCategories]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900">
@@ -568,9 +599,9 @@ export default function Home() {
                             onChange={(e) => setSelectedCategory(e.target.value)}
                           >
                             <option value="">Select a category</option>
-                            {voiceCategories.map((group) => (
-                              <option key={group._id} value={group.category}>
-                                {group.category}
+                            {voiceCategories.map((category) => (
+                              <option key={category._id} value={category.category}>
+                                {category.category}
                               </option>
                             ))}
                           </select>
@@ -588,9 +619,13 @@ export default function Home() {
                               onChange={(e) => setSelectedVoice(e.target.value)}
                             >
                               <option value="">Select a voice</option>
-                              {voiceCategories.find(group => group.category === selectedCategory)?.voices.map((voice, index) => (
-                                <option key={index} value={voice.name} disabled={!isLoggedIn && !voice.free}>
-                                  {voice.name} {!isLoggedIn && !voice.free ? '(Pro)' : ''}
+                              {voiceCategories.find(category => category.category === selectedCategory)?.voices.map((voice, index) => (
+                                <option 
+                                  key={index} 
+                                  value={voice.name} 
+                                  disabled={userTTSCredits <= 1000 && !voice.is_free}
+                                >
+                                  {voice.name} {userTTSCredits <= 1000 && !voice.is_free ? '🔒' : ''}
                                 </option>
                               ))}
                             </select>
@@ -899,31 +934,25 @@ export default function Home() {
             <CardTitle className="text-3xl font-bold text-indigo-800">Our Pro Plans</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 { title: "TellerGen Text to Speech Pro", price: 499, features: [
                   "100+ Premium and Celebrity voices",
                   "High quality audio download",
                   "Ultra realistic voices",
                   "1 million characters",
-                  "Unlimited Hindi characters" // Added this new feature
+                  "Unlimited Hindi characters"
                 ]},
                 { title: "TellerGen Voice Cloning Pro", price: 499, features: [
                   "Clone up to 1 million characters",
                   "High quality audio",
                   "Ultra realistic cloned voice"
                 ]},
-                { title: "TellerGen Talking Image Pro", price: 799, features: [
-                  "Up to 600 minutes of video generation",
+                { title: "TellerGen Talking Image Pro", price: 999, features: [
+                  "Up to 60 minutes of video generation",
                   "High quality image to video",
                   "Realistic head movement",
                   "Perfect lip syncing"
-                ]},
-                { title: "TellerGen Combo Pack", price: 999, features: [
-                  "Text to Speech Pro",
-                  "Talking Image Pro",
-                  "Voice Cloning Pro",
-                  "Best value for all features"
                 ]}
               ].map((plan, index) => (
                 <div key={index} className="bg-indigo-50 p-6 rounded-lg shadow-md space-y-4">
@@ -936,21 +965,12 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  {plan.title === "TellerGen Talking Image Pro" ? (
-                    <Button 
-                      className="w-full bg-gray-400 text-white mt-4 cursor-not-allowed"
-                      disabled
-                    >
-                      Only Available in Combo Pack
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} 
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
-                    >
-                      {plan.title === "TellerGen Combo Pack" ? "Buy Combo" : "Buy Pro"} (Rs {plan.price})
-                    </Button>
-                  )}
+                  <Button 
+                    onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} 
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
+                  >
+                    Buy Pro (Rs {plan.price})
+                  </Button>
                 </div>
               ))}
             </div>

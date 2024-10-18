@@ -8,7 +8,7 @@ type UpdateQuery = {
     textToSpeechCharacters?: number;
     voiceCloningCharacters?: number;
     credits?: number;
-    talkingImageMinutes?: number;
+    talkingImageCharacters?: number;
 };
 
 export async function POST(request: Request) {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { creditsUsed, creditType, language } = await request.json()
+    const { creditsUsed, creditType, language} = await request.json()
 
     const user = await User.findById(userId)
 
@@ -38,26 +38,27 @@ export async function POST(request: Request) {
       
       if (user.textToSpeechCharacters >= creditsUsed) {
         updateQuery['textToSpeechCharacters'] = -creditsUsed;
-      } else if (user.credits >= creditsUsed) {
-        updateQuery['credits'] = -creditsUsed;
       } else {
-        return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
+        return NextResponse.json({ error: 'Insufficient Text to Speech Pro credits' }, { status: 400 })
       }
     } else if (creditType === 'Voice Cloning Pro') {
       if (user.voiceCloningCharacters >= creditsUsed) {
         updateQuery['voiceCloningCharacters'] = -creditsUsed;
-      } else if (user.credits >= creditsUsed) {
-        updateQuery['credits'] = -creditsUsed;
       } else {
-        return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
+        return NextResponse.json({ error: 'Insufficient Voice Cloning Pro credits' }, { status: 400 })
       }
     } else if (creditType === 'Talking Image') {
-      if (user.talkingImageMinutes >= creditsUsed) {
-        updateQuery['talkingImageMinutes'] = -creditsUsed;
-      } else if (user.credits >= creditsUsed) {
-        updateQuery['credits'] = -creditsUsed;
+      if (typeof user.talkingImageCharacters === 'undefined') {
+        return NextResponse.json({ error: 'Talking Image credits not initialized for user' }, { status: 400 })
+      }
+      if (user.talkingImageCharacters >= creditsUsed) {
+        updateQuery['talkingImageCharacters'] = -creditsUsed;
       } else {
-        return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
+        return NextResponse.json({ 
+          error: 'Insufficient Talking Image credits', 
+          available: user.talkingImageCharacters, 
+          required: creditsUsed 
+        }, { status: 400 })
       }
     } else {
       if (user.credits < creditsUsed) {
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
       const updatedUser = await User.findByIdAndUpdate(
         userId,
         { $inc: updateQuery },
-        { new: true, select: 'credits textToSpeechCharacters voiceCloningCharacters talkingImageMinutes' }
+        { new: true, select: 'credits textToSpeechCharacters voiceCloningCharacters talkingImageCharacters' }
       )
       return NextResponse.json({ success: true, credits: updatedUser })
     } else {
@@ -79,6 +80,6 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error('Error updating user credits:', error)
-    return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to update credits', details: (error as Error).message }, { status: 500 })
   }
 }
