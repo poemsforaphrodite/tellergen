@@ -60,17 +60,16 @@ export async function POST(request: Request) {
     try {
       await sendPasswordResetEmail(user.email, resetToken);
       console.log('Password reset email sent successfully');
+      return NextResponse.json(
+        { message: 'A password reset link has been sent to your email.' },
+        { status: 200 }
+      );
     } catch (emailError: any) {
       console.error('Error sending password reset email:', emailError.message);
       console.error('Error details:', emailError);
-      // Even if email sending fails, we don't want to expose this to the user
-      // But we'll log it for debugging purposes
+      // Return an error response if email sending fails
+      return NextResponse.json({ error: 'Failed to send reset email. Please try again later or contact support.' }, { status: 500 });
     }
-
-    return NextResponse.json(
-      { message: 'If that email is registered, a password reset link has been sent.' },
-      { status: 200 }
-    );
   } catch (error: any) {
     console.error('Error in forget-password:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

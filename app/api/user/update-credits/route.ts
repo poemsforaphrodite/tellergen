@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { creditsUsed, creditType, language} = await request.json()
+    const { creditsUsed, creditType, language, useDefaultCredits } = await request.json()
 
     const user = await User.findById(userId)
 
@@ -38,14 +38,20 @@ export async function POST(request: Request) {
       
       if (user.textToSpeechCharacters >= creditsUsed) {
         updateQuery['textToSpeechCharacters'] = -creditsUsed;
+      } else if (useDefaultCredits && user.credits >= creditsUsed) {
+        // Use default credits if Text to Speech Pro credits are insufficient
+        updateQuery['credits'] = -creditsUsed;
       } else {
-        return NextResponse.json({ error: 'Insufficient Text to Speech Pro credits' }, { status: 400 })
+        return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
       }
     } else if (creditType === 'Voice Cloning Pro') {
       if (user.voiceCloningCharacters >= creditsUsed) {
         updateQuery['voiceCloningCharacters'] = -creditsUsed;
+      } else if (useDefaultCredits && user.credits >= creditsUsed) {
+        // Use default credits if Voice Cloning Pro credits are insufficient
+        updateQuery['credits'] = -creditsUsed;
       } else {
-        return NextResponse.json({ error: 'Insufficient Voice Cloning Pro credits' }, { status: 400 })
+        return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
       }
     } else if (creditType === 'Talking Image') {
       if (typeof user.talkingImageCharacters === 'undefined') {
@@ -53,9 +59,12 @@ export async function POST(request: Request) {
       }
       if (user.talkingImageCharacters >= creditsUsed) {
         updateQuery['talkingImageCharacters'] = -creditsUsed;
+      } else if (useDefaultCredits && user.credits >= creditsUsed) {
+        // Use default credits if Talking Image credits are insufficient
+        updateQuery['credits'] = -creditsUsed;
       } else {
         return NextResponse.json({ 
-          error: 'Insufficient Talking Image credits', 
+          error: 'Insufficient credits', 
           available: user.talkingImageCharacters, 
           required: creditsUsed 
         }, { status: 400 })

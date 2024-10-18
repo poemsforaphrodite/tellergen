@@ -31,10 +31,10 @@ export default function ForgotPasswordPage() {
       if (response.ok) {
         setMessage(data.message);
       } else {
-        setError(data.error || 'Something went wrong');
+        setError(data.error || 'An error occurred. Please try again later.');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('An unexpected error occurred. Please try again later or contact support.');
     } finally {
       setIsLoading(false);
     }

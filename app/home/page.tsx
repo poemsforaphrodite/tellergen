@@ -203,7 +203,8 @@ export default function Home() {
             body: JSON.stringify({
               creditsUsed: creditsNeeded,
               creditType: "Text to Speech Pro",
-              language: language
+              language: language,
+              useDefaultCredits: true // Add this line to allow using default credits
             }),
           });
 
