@@ -59,12 +59,9 @@ export async function POST(request: Request) {
       }
       if (user.talkingImageCharacters >= creditsUsed) {
         updateQuery['talkingImageCharacters'] = -creditsUsed;
-      } else if (useDefaultCredits && user.credits >= creditsUsed) {
-        // Use default credits if Talking Image credits are insufficient
-        updateQuery['credits'] = -creditsUsed;
       } else {
         return NextResponse.json({ 
-          error: 'Insufficient credits', 
+          error: 'Insufficient Talking Image credits', 
           available: user.talkingImageCharacters, 
           required: creditsUsed 
         }, { status: 400 })

@@ -204,7 +204,7 @@ export default function Home() {
               creditsUsed: creditsNeeded,
               creditType: "Text to Speech Pro",
               language: language,
-              useDefaultCredits: true // Add this line to allow using default credits
+              useDefaultCredits: true
             }),
           });
 
@@ -213,7 +213,6 @@ export default function Home() {
             throw new Error(errorData.error || "Failed to update credits");
           }
         } else if (activeTab === "Talking Image") {
-          // Similar credit check for Talking Image
           const updateCreditsResponse = await fetch("/api/user/update-credits", {
             method: "POST",
             headers: {
@@ -222,13 +221,13 @@ export default function Home() {
             body: JSON.stringify({
               creditsUsed: creditsNeeded,
               creditType: "Talking Image",
-              language: language
+              useDefaultCredits: false // Ensure default credits are not used for Talking Image
             }),
           });
 
           if (!updateCreditsResponse.ok) {
             const errorData = await updateCreditsResponse.json();
-            throw new Error(errorData.error || "Failed to update credits");
+            throw new Error(errorData.error || "Failed to update Talking Image credits");
           }
         } else if (activeTab === "Clone voice") {
           // Similar credit check for Clone voice
