@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
 import User from '@/models/User'
 import { getUserIdFromRequest } from '@/lib/auth'
+import { Types } from 'mongoose'
 
 export async function GET() {
   await dbConnect()
@@ -13,10 +14,16 @@ export async function GET() {
   }
 
   try {
+    // Validate that userId is a valid MongoDB ObjectId
+    if (!Types.ObjectId.isValid(userId)) {
+      return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
+    }
+
     // Select all necessary fields
     const user = await User.findById(userId).select(
-      'credits textToSpeechCharacters voiceCloningCharacters talkingImageCharacters' // Updated field name
+      'credits textToSpeechCharacters voiceCloningCharacters talkingImageCharacters'
     )
+    
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
@@ -26,8 +33,8 @@ export async function GET() {
         common: user.credits || 0,
         'Text to Speech Pro': user.textToSpeechCharacters || 0,
         'Voice Cloning Pro': user.voiceCloningCharacters || 0,
-        'Talking Image': user.talkingImageCharacters // Updated field name
-          ? Math.floor(user.talkingImageCharacters) // 1 character = 6 credits
+        'Talking Image': user.talkingImageCharacters
+          ? Math.floor(user.talkingImageCharacters)
           : 0,
       },
     })

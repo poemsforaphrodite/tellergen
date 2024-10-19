@@ -22,7 +22,6 @@ export async function GET() {
         is_free: voice.is_free
       }))
     }));
-    console.log(formattedCategories);
     return NextResponse.json(formattedCategories);
   } catch (error) {
     console.error('Error fetching voice categories:', error);

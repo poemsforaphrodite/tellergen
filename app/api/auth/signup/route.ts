@@ -3,6 +3,19 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { MongoServerError } from 'mongodb';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+
+// Initialize Firebase Admin SDK
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
 
 export async function POST(request: Request) {
   await dbConnect();
@@ -11,32 +24,46 @@ export async function POST(request: Request) {
   console.log('Signup attempt:', { username, email }); // Don't log passwords
 
   try {
-    // Check if user already exists (by email only)
-    console.log('Checking for existing user with email:', email); // Updated logging
-    const existingUser = await User.findOne({ email }); // Check only by email
+    // Create user in Firebase
+    const firebaseAuth = getAuth();
+    const firebaseUser = await firebaseAuth.createUser({
+      email,
+      password,
+      displayName: username,
+    });
+
+    console.log('Firebase user created:', firebaseUser.uid);
+
+    // Check if user already exists in MongoDB (by email only)
+    console.log('Checking for existing user with email:', email);
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log('User already exists:', existingUser); // Log existing user details
+      console.log('User already exists:', existingUser);
+      // Delete the Firebase user if MongoDB user already exists
+      await firebaseAuth.deleteUser(firebaseUser.uid);
       return NextResponse.json({ success: false, message: 'User already exists' }, { status: 400 });
     }
 
-    // Hash password
+    // Hash password for MongoDB (Firebase already handles its own password hashing)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user with 1000 default credits for each service
+    // Create new user in MongoDB with 1000 default credits for each service
     const newUser = new User({
+      firebaseUid: firebaseUser.uid, // Store Firebase UID
       username,
       email,
       password: hashedPassword,
-      credits: 1000, // Set default common credits to 1000
-      textToSpeechCharacters: 1000, // Set default Text to Speech Pro credits to 1000
-      voiceCloningCharacters: 1000, // Set default Voice Cloning Pro credits to 1000
-      talkingImageCharacters: 100 // Set default Talking Image credits to 1000
+      credits: 1000,
+      textToSpeechCharacters: 1000,
+      voiceCloningCharacters: 1000,
+      talkingImageCharacters: 100
     });
 
     await newUser.save();
     console.log('New user created:', { 
       username, 
       email, 
+      firebaseUid: firebaseUser.uid,
       credits: 1000, 
       textToSpeechCharacters: 1000, 
       voiceCloningCharacters: 1000, 

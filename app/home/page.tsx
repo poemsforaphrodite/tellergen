@@ -22,6 +22,9 @@ type VoiceCategory = {
   voices: Array<{ name: string; file_url: string; is_free: boolean }>;
 };
 
+// Add this constant at the top of your component or in a separate constants file
+const defaultHindiText = "यह डिफ़ॉलट हिंदी पाठ है। वॉइस जेनरेट करने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
   const [text, setText] = useState("")
@@ -48,8 +51,6 @@ export default function Home() {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [voiceCategories, setVoiceCategories] = useState<VoiceCategory[]>([]);
   const [userTTSCredits, setUserTTSCredits] = useState<number>(0);
-
-  const defaultHindiText = "यह डिफ़ॉल्ट हिंदी पाठ है। आप इसका उपयोग वॉइस का परीक्षण करने के लिए कर सकते हैं। बेहतर परिणाम के लिए, कृपया छोटे-छोटे पैराग्राफ़ का उपयोग करें। प्रत्येक पैराग्राफ़ में लगभग बीस से पच्चीस शब्द रखें। यह आपकी आवाज की गुणवत्ता को बनाए रखने में मदद करेगा।";
 
   useEffect(() => {
     console.log('Fetching voice categories...');
@@ -732,6 +733,13 @@ export default function Home() {
                         )}
                       </div>
                     </div>
+                    
+                    {/* Add the note about processing time */}
+                    <div className="bg-yellow-100 p-4 rounded-md">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Note:</strong> It takes approximately 10 minutes to generate a 60-second video. Please be patient during the processing time.
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="p-4 bg-gray-100 rounded-md text-center">
@@ -867,7 +875,7 @@ export default function Home() {
           </div>
         )}
 
-        {generatedAudio && (
+        {generatedAudio && activeTab !== "Talking Image" && (
           <Card className="backdrop-blur-md bg-white/90 shadow-lg">
             <CardHeader>
               <CardTitle className="text-xl font-semibold text-indigo-800">Generated Audio</CardTitle>
