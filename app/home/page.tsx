@@ -54,6 +54,10 @@ export default function Home() {
   const [userCommonCredits, setUserCommonCredits] = useState<number>(0);
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
 
+  // Add separate refs for different file inputs
+  const talkingImageAudioInputRef = useRef<HTMLInputElement>(null)
+  const cloneVoiceAudioInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     console.log('Fetching voice categories...');
     fetchVoiceCategories();
@@ -319,27 +323,22 @@ export default function Home() {
     }
   };
 
+  // Modify upload handlers to target specific inputs
   const handleImageUpload = () => {
     if (imageInputRef.current) {
-      imageInputRef.current.click();
-      imageInputRef.current.onchange = (e: Event) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) {
-          setImageFile(file);
-        }
-      };
+      imageInputRef.current.click()
     }
   }
 
-  const handleFileUpload = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-      fileInputRef.current.onchange = (e: Event) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) {
-          setAudioFile(file);
-        }
-      };
+  const handleTalkingImageAudioUpload = () => {
+    if (talkingImageAudioInputRef.current) {
+      talkingImageAudioInputRef.current.click()
+    }
+  }
+
+  const handleCloneVoiceAudioUpload = () => {
+    if (cloneVoiceAudioInputRef.current) {
+      cloneVoiceAudioInputRef.current.click()
     }
   }
 
@@ -713,7 +712,7 @@ export default function Home() {
                             className="hidden"
                             ref={imageInputRef}
                             onChange={(e) => {
-                              const file = e.target.files?.[0];
+                              const file = (e.target as HTMLInputElement).files?.[0];
                               if (file) {
                                 setImageFile(file);
                               }
@@ -731,9 +730,9 @@ export default function Home() {
                             type="file"
                             accept="audio/*"
                             className="hidden"
-                            ref={fileInputRef}
+                            ref={talkingImageAudioInputRef}
                             onChange={(e) => {
-                              const file = e.target.files?.[0];
+                              const file = (e.target as HTMLInputElement).files?.[0];
                               if (file) {
                                 setAudioFile(file);
                               }
@@ -742,7 +741,7 @@ export default function Home() {
                           <Button 
                             variant="outline" 
                             className="flex-1"
-                            onClick={handleFileUpload}
+                            onClick={handleTalkingImageAudioUpload}
                           >
                             <UploadIcon className="h-4 w-4 mr-2" />
                             {audioFile ? "Change audio" : "Upload audio"}
@@ -799,13 +798,13 @@ export default function Home() {
                       <h2 className="text-lg font-semibold mb-4">Upload or Record your voice</h2>
                       <div className="space-y-4">
                         <div className="flex items-center space-x-4">
-                          <Input
+                          <input
                             type="file"
                             accept="audio/*"
                             className="hidden"
-                            ref={fileInputRef}
+                            ref={cloneVoiceAudioInputRef}
                             onChange={(e) => {
-                              const file = e.target.files?.[0];
+                              const file = (e.target as HTMLInputElement).files?.[0];
                               if (file) {
                                 setAudioFile(file);
                               }
@@ -814,7 +813,7 @@ export default function Home() {
                           <Button 
                             variant="outline" 
                             className="flex-1"
-                            onClick={handleFileUpload}
+                            onClick={handleCloneVoiceAudioUpload}
                           >
                             <UploadIcon className="h-4 w-4 mr-2" />
                             {audioFile ? "Change file" : "Upload audio"}
