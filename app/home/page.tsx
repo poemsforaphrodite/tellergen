@@ -319,14 +319,27 @@ export default function Home() {
     }
   };
 
-  const handleFileUpload = () => {
-    fileInputRef.current?.click()
+  const handleImageUpload = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.click();
+      imageInputRef.current.onchange = (e: Event) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          setImageFile(file);
+        }
+      };
+    }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setAudioFile(file)
+  const handleFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+      fileInputRef.current.onchange = (e: Event) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          setAudioFile(file);
+        }
+      };
     }
   }
 
@@ -411,17 +424,6 @@ export default function Home() {
     router.push(`/checkout?${queryParams}`);
   }
 
-  const handleImageUpload = () => {
-    imageInputRef.current?.click()
-  }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-    }
-  }
-
   const handleGenerateTalkingImage = async () => {
     setIsLoading(true)
     setError(null)
@@ -455,8 +457,8 @@ export default function Home() {
 
       const result = await response.json()
 
-      if (response.ok && result.videoData) {
-        setGeneratedVideo(result.videoData)
+      if (response.ok && result.videoUrl) {
+        setGeneratedVideo(result.videoUrl)
         
         // Deduct credits
         const updateCreditsResponse = await fetch('/api/user/update-credits', {
@@ -705,12 +707,17 @@ export default function Home() {
                       <h2 className="text-lg font-semibold mb-4">Upload Image and Audio</h2>
                       <div className="space-y-4">
                         <div className="flex items-center space-x-4">
-                          <Input
+                          <input
                             type="file"
                             accept="image/*"
                             className="hidden"
                             ref={imageInputRef}
-                            onChange={handleImageChange}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setImageFile(file);
+                              }
+                            }}
                           />
                           <Button 
                             variant="outline" 
@@ -720,12 +727,17 @@ export default function Home() {
                             <UploadIcon className="h-4 w-4 mr-2" />
                             {imageFile ? "Change image" : "Upload image"}
                           </Button>
-                          <Input
+                          <input
                             type="file"
                             accept="audio/*"
                             className="hidden"
                             ref={fileInputRef}
-                            onChange={handleFileChange}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setAudioFile(file);
+                              }
+                            }}
                           />
                           <Button 
                             variant="outline" 
@@ -792,7 +804,12 @@ export default function Home() {
                             accept="audio/*"
                             className="hidden"
                             ref={fileInputRef}
-                            onChange={handleFileChange}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setAudioFile(file);
+                              }
+                            }}
                           />
                           <Button 
                             variant="outline" 
