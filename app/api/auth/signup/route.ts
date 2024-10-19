@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       credits: 1000,
       textToSpeechCharacters: 1000,
       voiceCloningCharacters: 1000,
-      talkingImageCharacters: 100
+      talkingImageCharacters: 0
     });
 
     await newUser.save();
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       credits: 1000, 
       textToSpeechCharacters: 1000, 
       voiceCloningCharacters: 1000, 
-      talkingImageCharacters: 100 
+      talkingImageCharacters: 0
     });
 
     return NextResponse.json({ success: true, message: 'User registered successfully' });
