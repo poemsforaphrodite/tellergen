@@ -23,7 +23,7 @@ type VoiceCategory = {
 };
 
 // Add this constant at the top of your component or in a separate constants file
-const defaultHindiText = "यह डिफ़ॉलट हिंदी पाठ है। वॉइस जेनरेट करने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
+const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट करने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
@@ -51,6 +51,8 @@ export default function Home() {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [voiceCategories, setVoiceCategories] = useState<VoiceCategory[]>([]);
   const [userTTSCredits, setUserTTSCredits] = useState<number>(0);
+  const [userCommonCredits, setUserCommonCredits] = useState<number>(0);
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('Fetching voice categories...');
@@ -81,6 +83,7 @@ export default function Home() {
       const data = await response.json();
       if (response.ok) {
         setUserTTSCredits(data.credits['Text to Speech Pro']);
+        setUserCommonCredits(data.credits.common);
       } else {
         console.error('Error fetching user credits:', data.error);
       }
@@ -270,18 +273,26 @@ export default function Home() {
       });
       console.log("Response:", response);
       console.log("Response status:", response.status);
-      const result = await response.json();
-      console.log("Generation result:", result);
-      
-      if (response.ok) {
-        console.log("Response is OK");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get("content-type");
+      console.log("Content-Type:", contentType);
+
+      if (contentType && contentType.includes("application/json")) {
+        const result = await response.json();
+        console.log("JSON result:", result);
+
         if (activeTab === "TTS" || activeTab === "Clone voice") {
           if (result && typeof result === 'object' && 'audioUrl' in result) {
             console.log("Setting generated audio URL:", result.audioUrl);
             setGeneratedAudio(result.audioUrl);
+            setAudioSrc(result.audioUrl); // Set the audio source
           } else {
-            console.error("Unexpected response format:", result);
-            throw new Error("Failed to generate audio: Unexpected response format");
+            console.error("Unexpected JSON response format:", result);
+            throw new Error("Failed to generate audio: Unexpected JSON response format");
           }
         } else if (activeTab === "Talking Image") {
           if (result.videoData) {
@@ -290,9 +301,15 @@ export default function Home() {
             throw new Error(result.error || "Failed to generate video.");
           }
         }
+      } else if (contentType && contentType.includes("audio/")) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        console.log("Setting generated audio URL:", audioUrl);
+        setGeneratedAudio(audioUrl);
+        setAudioSrc(audioUrl); // Set the audio source
       } else {
-        console.error("Response not OK:", response.status, result);
-        throw new Error(result.error || "Generation failed");
+        console.error("Unexpected content type:", contentType);
+        throw new Error("Failed to generate audio: Unexpected content type");
       }
     } catch (error) {
       console.error("Error during generation:", error);
@@ -316,24 +333,36 @@ export default function Home() {
   const togglePlayPause = () => {
     if (audioRef.current) {
       if (isPlaying) {
-        audioRef.current.pause()
+        audioRef.current.pause();
       } else {
-        audioRef.current.play()
+        audioRef.current.play().catch(e => {
+          console.error("Error playing audio:", e);
+          setError("Failed to play audio. Please try again.");
+        });
       }
-      setIsPlaying(!isPlaying)
+      setIsPlaying(!isPlaying);
     }
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (generatedAudio) {
-      const link = document.createElement('a')
-      link.href = generatedAudio
-      link.download = 'generated_audio.mp3'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      try {
+        const response = await fetch(generatedAudio);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'generated_audio.mp3';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error downloading file:', error);
+        setError('Failed to download the audio file.');
+      }
     }
-  }
+  };
 
   const startRecording = async () => {
     try {
@@ -624,9 +653,9 @@ export default function Home() {
                                 <option 
                                   key={index} 
                                   value={voice.name} 
-                                  disabled={userTTSCredits <= 1000 && !voice.is_free}
+                                  disabled={userTTSCredits <= 1000 && userCommonCredits <= 1000 && !voice.is_free}
                                 >
-                                  {voice.name} {userTTSCredits <= 1000 && !voice.is_free ? '🔒' : ''}
+                                  {voice.name} {userTTSCredits <= 1000 && userCommonCredits <= 1000 && !voice.is_free ? '🔒' : ''}
                                 </option>
                               ))}
                             </select>
@@ -914,9 +943,11 @@ export default function Home() {
               </div>
               <audio
                 ref={audioRef}
-                src={generatedAudio}
+                src={audioSrc || ''}
                 className="hidden"
                 onEnded={() => setIsPlaying(false)}
+                onLoadedMetadata={() => console.log("Audio metadata loaded")}
+                onError={(e) => console.error("Audio error:", e)}
               />
             </CardContent>
           </Card>
