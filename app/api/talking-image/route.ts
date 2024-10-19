@@ -80,7 +80,9 @@ export async function POST(request: Request) {
         input: {
           driven_audio: `data:audio/wav;base64,${audioBase64}`,
           source_image: `data:image/png;base64,${imageBase64}`,
-          use_enhancer: true
+          use_enhancer: true,
+          preprocess: "full",
+          size_of_image: 512
         }
       })
     });
