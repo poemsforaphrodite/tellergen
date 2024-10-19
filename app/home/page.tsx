@@ -46,7 +46,6 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
-  const imageInputRef = useRef<HTMLInputElement>(null)
   const [voiceCategories, setVoiceCategories] = useState<VoiceCategory[]>([]);
   const [userTTSCredits, setUserTTSCredits] = useState<number>(0);
   const [userCommonCredits, setUserCommonCredits] = useState<number>(0);
@@ -55,10 +54,6 @@ export default function Home() {
   // **Added** separate state variables for audio files
   const [talkingImageAudioFile, setTalkingImageAudioFile] = useState<File | null>(null);
   const [cloneVoiceAudioFile, setCloneVoiceAudioFile] = useState<File | null>(null);
-
-  // **Added** separate refs for different file inputs
-  const talkingImageAudioInputRef = useRef<HTMLInputElement>(null);
-  const cloneVoiceAudioInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     console.log('Fetching voice categories...');
@@ -333,25 +328,6 @@ export default function Home() {
       setError((error as Error).message || "An unexpected error occurred");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // **Modified** Upload handlers to target specific inputs
-  const handleImageUpload = () => {
-    if (imageInputRef.current) {
-      imageInputRef.current.click();
-    }
-  };
-
-  const handleTalkingImageAudioUpload = () => {
-    if (talkingImageAudioInputRef.current) {
-      talkingImageAudioInputRef.current.click();
-    }
-  };
-
-  const handleCloneVoiceAudioUpload = () => {
-    if (cloneVoiceAudioInputRef.current) {
-      cloneVoiceAudioInputRef.current.click();
     }
   };
 
@@ -703,43 +679,41 @@ export default function Home() {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            ref={imageInputRef}
+                            id="image-upload"
                             onChange={(e) => {
-                              const file = (e.target as HTMLInputElement).files?.[0];
+                              const file = e.target.files?.[0];
                               if (file) {
                                 setImageFile(file);
                               }
                             }}
                           />
-                          <Button 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={handleImageUpload}
+                          <label 
+                            htmlFor="image-upload"
+                            className="flex-1 px-4 py-2 bg-white text-indigo-600 border border-indigo-600 rounded-md cursor-pointer hover:bg-indigo-50 transition-colors duration-200 text-center"
                           >
-                            <UploadIcon className="h-4 w-4 mr-2" />
+                            <UploadIcon className="h-4 w-4 inline-block mr-2" />
                             {imageFile ? "Change image" : "Upload image"}
-                          </Button>
+                          </label>
                           
                           <input
                             type="file"
                             accept="audio/*"
                             className="hidden"
-                            ref={talkingImageAudioInputRef}
+                            id="audio-upload"
                             onChange={(e) => {
-                              const file = (e.target as HTMLInputElement).files?.[0];
+                              const file = e.target.files?.[0];
                               if (file) {
                                 setTalkingImageAudioFile(file);
                               }
                             }}
                           />
-                          <Button 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={handleTalkingImageAudioUpload}
+                          <label 
+                            htmlFor="audio-upload"
+                            className="flex-1 px-4 py-2 bg-white text-indigo-600 border border-indigo-600 rounded-md cursor-pointer hover:bg-indigo-50 transition-colors duration-200 text-center"
                           >
-                            <UploadIcon className="h-4 w-4 mr-2" />
+                            <UploadIcon className="h-4 w-4 inline-block mr-2" />
                             {talkingImageAudioFile ? "Change audio" : "Upload audio"}
-                          </Button>
+                          </label>
                         </div>
                         
                         {imageFile && (
@@ -796,22 +770,21 @@ export default function Home() {
                             type="file"
                             accept="audio/*"
                             className="hidden"
-                            ref={cloneVoiceAudioInputRef}
+                            id="clone-voice-upload"
                             onChange={(e) => {
-                              const file = (e.target as HTMLInputElement).files?.[0];
+                              const file = e.target.files?.[0];
                               if (file) {
                                 setCloneVoiceAudioFile(file);
                               }
                             }}
                           />
-                          <Button 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={handleCloneVoiceAudioUpload}
+                          <label 
+                            htmlFor="clone-voice-upload"
+                            className="flex-1 px-4 py-2 bg-white text-indigo-600 border border-indigo-600 rounded-md cursor-pointer hover:bg-indigo-50 transition-colors duration-200 text-center"
                           >
-                            <UploadIcon className="h-4 w-4 mr-2" />
+                            <UploadIcon className="h-4 w-4 inline-block mr-2" />
                             {cloneVoiceAudioFile ? "Change file" : "Upload audio"}
-                          </Button>
+                          </label>
                           <Button
                             variant={isRecording ? "destructive" : "default"}
                             onClick={isRecording ? stopRecording : startRecording}
