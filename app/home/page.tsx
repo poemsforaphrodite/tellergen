@@ -52,9 +52,13 @@ export default function Home() {
   const [userCommonCredits, setUserCommonCredits] = useState<number>(0);
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
 
-  // Add separate refs for different file inputs
-  const talkingImageAudioInputRef = useRef<HTMLInputElement>(null)
-  const cloneVoiceAudioInputRef = useRef<HTMLInputElement>(null)
+  // **Added** separate state variables for audio files
+  const [talkingImageAudioFile, setTalkingImageAudioFile] = useState<File | null>(null);
+  const [cloneVoiceAudioFile, setCloneVoiceAudioFile] = useState<File | null>(null);
+
+  // **Added** separate refs for different file inputs
+  const talkingImageAudioInputRef = useRef<HTMLInputElement>(null);
+  const cloneVoiceAudioInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     console.log('Fetching voice categories...');
@@ -150,7 +154,18 @@ export default function Home() {
     }
   }, [activeTab, selectedCategory]);
 
+  // **Modified** handleGenerate to accommodate separate audio files
   const handleGenerate = async () => {
+    // Determine which audio file to use based on the active tab
+    let currentAudioFile: File | null = null;
+    if (activeTab === "Talking Image") {
+      currentAudioFile = talkingImageAudioFile;
+    } else if (activeTab === "Clone voice") {
+      currentAudioFile = cloneVoiceAudioFile;
+    } else {
+      currentAudioFile = audioFile; // For TTS
+    }
+
     if (!isLoggedIn) {
       setError("Please log in to use this feature.");
       return;
@@ -176,8 +191,8 @@ export default function Home() {
       const language = selectedCategory.toLowerCase() === "hindi" ? "hi" : "en";
       formData.append("language", language);
 
-      if (audioFile) {
-        formData.append("audio_file", audioFile);
+      if (currentAudioFile) {
+        formData.append("audio_file", currentAudioFile);
       }
 
       let creditsNeeded = 0;
@@ -185,7 +200,7 @@ export default function Home() {
       if (activeTab === "TTS") {
         creditsNeeded = text.length; // 1 credit per character
       } else if (activeTab === "Talking Image") {
-        const audioDuration = await getAudioDuration(audioFile);
+        const audioDuration = await getAudioDuration(currentAudioFile);
         creditsNeeded = Math.ceil(audioDuration / 10); // 1 credit per 10 seconds
       } else if (activeTab === "Clone voice") {
         creditsNeeded = text.length; // Assuming similar credit usage
@@ -321,24 +336,24 @@ export default function Home() {
     }
   };
 
-  // Modify upload handlers to target specific inputs
+  // **Modified** Upload handlers to target specific inputs
   const handleImageUpload = () => {
     if (imageInputRef.current) {
-      imageInputRef.current.click()
+      imageInputRef.current.click();
     }
-  }
+  };
 
   const handleTalkingImageAudioUpload = () => {
     if (talkingImageAudioInputRef.current) {
-      talkingImageAudioInputRef.current.click()
+      talkingImageAudioInputRef.current.click();
     }
-  }
+  };
 
   const handleCloneVoiceAudioUpload = () => {
     if (cloneVoiceAudioInputRef.current) {
-      cloneVoiceAudioInputRef.current.click()
+      cloneVoiceAudioInputRef.current.click();
     }
-  }
+  };
 
   const togglePlayPause = () => {
     if (audioRef.current) {
@@ -429,12 +444,12 @@ export default function Home() {
       if (imageFile) {
         formData.append("image", imageFile)
       }
-      if (audioFile) {
-        formData.append("audio", audioFile)
+      if (talkingImageAudioFile) {
+        formData.append("audio", talkingImageAudioFile)
       }
 
       // Get audio duration
-      const audioDuration = await getAudioDuration(audioFile)
+      const audioDuration = await getAudioDuration(talkingImageAudioFile)
       
       // Calculate credits needed: 1 credit per 10 seconds, rounded up
       const creditsNeeded = Math.ceil(audioDuration / 10)
@@ -566,21 +581,11 @@ export default function Home() {
             <CardTitle className="text-3xl font-bold text-indigo-800">Voice Generation</CardTitle>
           </CardHeader>
           <CardContent className="space-y-8">
-            <Tabs value={activeTab} onValueChange={(value) => {
-              setActiveTab(value);
-              if (value === "Clone voice") {
-                setText(""); // Clear text when switching to Clone voice tab
-              }
-            }} className="w-full">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-8 bg-indigo-100 p-1 rounded-lg">
                 <TabsTrigger 
                   value="TTS" 
                   className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all"
-                  onClick={(e) => {
-                    if (!isLoggedIn) {
-                      e.preventDefault();
-                    }
-                  }}
                 >
                   <MicIcon className="w-4 h-4 mr-2" />
                   TTS
@@ -588,11 +593,6 @@ export default function Home() {
                 <TabsTrigger 
                   value="Talking Image" 
                   className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all"
-                  onClick={(e) => {
-                    if (!isLoggedIn) {
-                      e.preventDefault();
-                    }
-                  }}
                 >
                   <ImageIcon className="w-4 h-4 mr-2" />
                   Talking Image
@@ -600,11 +600,6 @@ export default function Home() {
                 <TabsTrigger 
                   value="Clone voice" 
                   className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 rounded-md transition-all"
-                  onClick={(e) => {
-                    if (!isLoggedIn) {
-                      e.preventDefault();
-                    }
-                  }}
                 >
                   <UserIcon className="w-4 h-4 mr-2" />
                   Clone voice
@@ -724,6 +719,7 @@ export default function Home() {
                             <UploadIcon className="h-4 w-4 mr-2" />
                             {imageFile ? "Change image" : "Upload image"}
                           </Button>
+                          
                           <input
                             type="file"
                             accept="audio/*"
@@ -732,7 +728,7 @@ export default function Home() {
                             onChange={(e) => {
                               const file = (e.target as HTMLInputElement).files?.[0];
                               if (file) {
-                                setAudioFile(file);
+                                setTalkingImageAudioFile(file);
                               }
                             }}
                           />
@@ -742,7 +738,7 @@ export default function Home() {
                             onClick={handleTalkingImageAudioUpload}
                           >
                             <UploadIcon className="h-4 w-4 mr-2" />
-                            {audioFile ? "Change audio" : "Upload audio"}
+                            {talkingImageAudioFile ? "Change audio" : "Upload audio"}
                           </Button>
                         </div>
                         
@@ -758,12 +754,12 @@ export default function Home() {
                           </div>
                         )}
                         
-                        {audioFile && (
+                        {talkingImageAudioFile && (
                           <div className="bg-gray-100 p-4 rounded-md">
                             <p className="text-sm font-medium mb-2">Selected Audio:</p>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-600">{audioFile.name}</span>
-                              <Button variant="ghost" size="sm" onClick={() => setAudioFile(null)}>
+                              <span className="text-sm text-gray-600">{talkingImageAudioFile.name}</span>
+                              <Button variant="ghost" size="sm" onClick={() => setTalkingImageAudioFile(null)}>
                                 Remove
                               </Button>
                             </div>
@@ -804,7 +800,7 @@ export default function Home() {
                             onChange={(e) => {
                               const file = (e.target as HTMLInputElement).files?.[0];
                               if (file) {
-                                setAudioFile(file);
+                                setCloneVoiceAudioFile(file);
                               }
                             }}
                           />
@@ -814,7 +810,7 @@ export default function Home() {
                             onClick={handleCloneVoiceAudioUpload}
                           >
                             <UploadIcon className="h-4 w-4 mr-2" />
-                            {audioFile ? "Change file" : "Upload audio"}
+                            {cloneVoiceAudioFile ? "Change file" : "Upload audio"}
                           </Button>
                           <Button
                             variant={isRecording ? "destructive" : "default"}
@@ -835,12 +831,12 @@ export default function Home() {
                           </Button>
                         </div>
                         
-                        {audioFile && !isRecording && (
+                        {cloneVoiceAudioFile && !isRecording && (
                           <div className="bg-gray-100 p-4 rounded-md">
                             <p className="text-sm font-medium mb-2">Selected Audio:</p>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-600">{audioFile.name}</span>
-                              <Button variant="ghost" size="sm" onClick={() => setAudioFile(null)}>
+                              <span className="text-sm text-gray-600">{cloneVoiceAudioFile.name}</span>
+                              <Button variant="ghost" size="sm" onClick={() => setCloneVoiceAudioFile(null)}>
                                 Remove
                               </Button>
                             </div>
@@ -884,7 +880,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <div className="p-4 bg-gray-100 rounded-md text-center">
-                    <p className="text-gray-600 mb-4">Please log in to access the Clone voice feature.</p>
+                    <p className="text-gray-600 mb-4">Please log in to access the Clone Voice feature.</p>
                     <Link href="/login">
                       <Button variant="default">Log In</Button>
                     </Link>
@@ -898,7 +894,12 @@ export default function Home() {
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
               size="lg" 
               onClick={activeTab === "Talking Image" ? handleGenerateTalkingImage : handleGenerate} 
-              disabled={isLoading || !isLoggedIn || (activeTab === "Clone voice" && !audioFile) || (activeTab === "Talking Image" && (!imageFile || !audioFile))}
+              disabled={
+                isLoading || 
+                (activeTab !== "TTS" && !isLoggedIn) || 
+                (activeTab === "Clone voice" && !cloneVoiceAudioFile) || 
+                (activeTab === "Talking Image" && (!imageFile || !talkingImageAudioFile))
+              }
             >
               {isLoading ? (
                 <>
