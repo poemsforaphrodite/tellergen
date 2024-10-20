@@ -22,7 +22,7 @@ type VoiceCategory = {
 };
 
 // Add this constant at the top of your component or in a separate constants file
-const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट करने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
+const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट रने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
@@ -413,40 +413,41 @@ export default function Home() {
   }
 
   const handleGenerateTalkingImage = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
-      const formData = new FormData()
+      const formData = new FormData();
       if (imageFile) {
-        formData.append("image", imageFile)
+        formData.append("image", imageFile);
       }
       if (talkingImageAudioFile) {
-        formData.append("audio", talkingImageAudioFile)
+        // Use 'audio_file' instead of 'audio' for consistency
+        formData.append("audio_file", talkingImageAudioFile);
       }
 
       // Get audio duration
-      const audioDuration = await getAudioDuration(talkingImageAudioFile)
+      const audioDuration = await getAudioDuration(talkingImageAudioFile);
       
       // Calculate credits needed: 1 credit per 10 seconds, rounded up
-      const creditsNeeded = Math.ceil(audioDuration / 10)
+      const creditsNeeded = Math.ceil(audioDuration / 10);
 
       // Check if the user has enough credits
-      const creditsResponse = await fetch('/api/user/credits')
-      const creditsData = await creditsResponse.json()
+      const creditsResponse = await fetch('/api/user/credits');
+      const creditsData = await creditsResponse.json();
       
       if (creditsData.credits['Talking Image'] < creditsNeeded) {
-        throw new Error(`Not enough credits. You have ${creditsData.credits['Talking Image']} credits, but need ${creditsNeeded} credits.`)
+        throw new Error(`Not enough credits. You have ${creditsData.credits['Talking Image']} credits, but need ${creditsNeeded} credits.`);
       }
 
       const response = await fetch("/api/talking-image", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (response.ok && result.videoUrl) {
-        setGeneratedVideo(result.videoUrl)
+        setGeneratedVideo(result.videoUrl);
         
         // Deduct credits
         const updateCreditsResponse = await fetch('/api/user/update-credits', {
@@ -458,23 +459,23 @@ export default function Home() {
             creditsUsed: creditsNeeded,
             creditType: 'Talking Image'
           }),
-        })
+        });
         
         if (!updateCreditsResponse.ok) {
-          const errorData = await updateCreditsResponse.json()
-          console.error("Failed to update credits:", errorData)
-          setError(`Failed to update credits: ${errorData.error}. Available: ${errorData.available}, Required: ${errorData.required}`)
+          const errorData = await updateCreditsResponse.json();
+          console.error("Failed to update credits:", errorData);
+          setError(`Failed to update credits: ${errorData.error}. Available: ${errorData.available}, Required: ${errorData.required}`);
         }
       } else {
-        throw new Error(result.error || "Failed to generate talking image video")
+        throw new Error(result.error || "Failed to generate talking image video");
       }
     } catch (error) {
-      console.error("Error generating talking image video:", error)
-      setError((error as Error).message)
+      console.error("Error generating talking image video:", error);
+      setError((error as Error).message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Helper function to get audio duration
   const getAudioDuration = (file: File | null): Promise<number> => {
@@ -699,7 +700,7 @@ export default function Home() {
                             type="file"
                             accept="audio/*"
                             className="hidden"
-                            id="audio-upload"
+                            id="talking-image-audio-upload"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
@@ -708,7 +709,7 @@ export default function Home() {
                             }}
                           />
                           <label 
-                            htmlFor="audio-upload"
+                            htmlFor="talking-image-audio-upload"
                             className="flex-1 px-4 py-2 bg-white text-indigo-600 border border-indigo-600 rounded-md cursor-pointer hover:bg-indigo-50 transition-colors duration-200 text-center"
                           >
                             <UploadIcon className="h-4 w-4 inline-block mr-2" />

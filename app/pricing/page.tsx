@@ -33,22 +33,12 @@ export default function PricingPage() {
     },
     {
       title: "TellerGen Talking Image Pro",
-      price: 499,
+      price: 999,
       features: [
-        "Up to 1000 minutes of video generation",
+        "Up to 60 minutes of video generation",
         "High quality image to video",
         "Realistic head movement",
         "Perfect lip syncing"
-      ]
-    },
-    {
-      title: "TellerGen Combo Pack",
-      price: 999,
-      features: [
-        "Text to Speech Pro",
-        "Voice Cloning Pro",
-        "Talking Image Pro",
-        "Best value for all features"
       ]
     }
   ]
@@ -64,7 +54,7 @@ export default function PricingPage() {
           <CardTitle className="text-3xl font-bold text-indigo-800 text-center">Our Pro Plans</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {plans.map((plan, index) => (
               <div key={index} className="bg-white p-6 rounded-lg shadow-md space-y-4 border border-indigo-100 hover:border-indigo-300 transition-all duration-300">
                 <h3 className="text-xl font-semibold text-indigo-800">{plan.title}</h3>
@@ -81,7 +71,7 @@ export default function PricingPage() {
                   onClick={() => handleBuyPro(plan.title, plan.price)} 
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
                 >
-                  {plan.title === "TellerGen Combo Pack" ? "Buy Combo" : "Buy Pro"}
+                  {plan.title === "TellerGen Talking Image Pro" ? "Buy Talking Image" : "Buy Pro"}
                 </Button>
               </div>
             ))}
