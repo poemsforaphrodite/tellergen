@@ -22,7 +22,7 @@ type VoiceCategory = {
 };
 
 // Add this constant at the top of your component or in a separate constants file
-const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट रने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
+const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट करने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
