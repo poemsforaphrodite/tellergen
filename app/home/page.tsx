@@ -758,6 +758,13 @@ export default function Home() {
                         <strong>Note:</strong> It takes approximately 10 minutes to generate a 60-second video. Please be patient during the processing time.
                       </p>
                     </div>
+
+                    {/* Add the new note about image resolution and headroom space */}
+                    <div className="bg-blue-100 p-4 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        <strong>For better results:</strong> Use 512×512 image resolution. For long portrait images, give at least 1/3rd headroom space.
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="p-4 bg-gray-100 rounded-md text-center">
