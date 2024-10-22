@@ -985,7 +985,6 @@ export default function Home() {
                   "High quality audio download",
                   "Ultra realistic voices",
                   "1 million characters",
-                  "Unlimited Hindi characters"
                 ]},
                 { title: "TellerGen Voice Cloning Pro", price: 499, features: [
                   "Clone up to 1 million characters",
