@@ -76,15 +76,10 @@ export default function CreditPage() {
     { credits: 4000, price: 30 },
     { credits: 7000, price: 50 },
     { credits: 12000, price: 100 },
-    { product: 'tellergen_combo_pack', price: 999 } // Added Combo Pack
   ]
 
-  const handlePurchase = (credits: number, price: number, product?: string) => {
-    if (product) {
-      router.push(`/checkout?product=${product}&price=${price}`);
-    } else {
-      router.push(`/checkout?product=${credits}_credits&price=${price}`);
-    }
+  const handlePurchase = (credits: number, price: number) => {
+    router.push(`/checkout?product=${credits}_credits&price=${price}`);
   }
 
   return (
@@ -129,13 +124,13 @@ export default function CreditPage() {
               <div>
                 <h3 className="text-2xl font-semibold text-indigo-800 mb-4">Purchase Credits:</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {purchaseOptions.map(({ credits, price, product }) => (
+                  {purchaseOptions.map(({ credits, price }) => (
                     <Button 
-                      key={credits || product} 
-                      onClick={() => handlePurchase(credits ?? 0, price, product)}
+                      key={credits} 
+                      onClick={() => handlePurchase(credits, price)}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white text-lg py-6"
                     >
-                      {product ? `Buy Combo Pack - Rs ${price}` : `Buy ${credits?.toLocaleString() ?? 0} Credits - Rs ${price}`}
+                      Buy {credits.toLocaleString()} Credits - Rs {price}
                     </Button>
                   ))}
                 </div>

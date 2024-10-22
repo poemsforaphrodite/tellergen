@@ -54,10 +54,14 @@ export async function POST(request: Request) {
   }
 
   const formData = await request.formData()
-  const image = formData.get('image') as File
-  const audio = formData.get('audio') as File
+  const image = formData.get('image') as File | null
+  const audio = formData.get('audio') as File | null
 
   console.log('Received request:', { image: image?.name, audio: audio?.name })
+
+  if (!image || !audio) {
+    return NextResponse.json({ error: 'Both image and audio files are required' }, { status: 400 })
+  }
 
   try {
     // Get user

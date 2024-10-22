@@ -421,8 +421,12 @@ export default function Home() {
         formData.append("image", imageFile);
       }
       if (talkingImageAudioFile) {
-        // Use 'audio_file' instead of 'audio' for consistency
-        formData.append("audio_file", talkingImageAudioFile);
+        formData.append("audio", talkingImageAudioFile);
+      }
+
+      // Check if both files are present
+      if (!imageFile || !talkingImageAudioFile) {
+        throw new Error("Both image and audio files are required.");
       }
 
       // Get audio duration
@@ -444,10 +448,15 @@ export default function Home() {
         body: formData,
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate talking image video");
+      }
+
       const result = await response.json();
 
-      if (response.ok && result.videoUrl) {
-        setGeneratedVideo(result.videoUrl);
+      if (result.videoData) {
+        setGeneratedVideo(result.videoData);
         
         // Deduct credits
         const updateCreditsResponse = await fetch('/api/user/update-credits', {
@@ -467,7 +476,7 @@ export default function Home() {
           setError(`Failed to update credits: ${errorData.error}. Available: ${errorData.available}, Required: ${errorData.required}`);
         }
       } else {
-        throw new Error(result.error || "Failed to generate talking image video");
+        throw new Error("Failed to generate talking image video");
       }
     } catch (error) {
       console.error("Error generating talking image video:", error);
