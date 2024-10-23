@@ -30,27 +30,27 @@ interface User {
   }>;
 }
 
-// Update the CreditBalance type
+// Update the CreditBalance type to match the credit page
 type CreditBalance = {
   common: number;
-  ttsProSubscription: {
+  'Text to Speech Pro': {
     isSubscribed: boolean;
-    endDate: string | null;
+    subscriptionEndDate: Date | null;
   };
-  voiceCloning: number;
-  talkingImage: number;
+  'Voice Cloning Pro': number;
+  'Talking Image': number;
 };
 
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance>({
     common: 0,
-    ttsProSubscription: {
+    'Text to Speech Pro': {
       isSubscribed: false,
-      endDate: null
+      subscriptionEndDate: null
     },
-    voiceCloning: 0,
-    talkingImage: 0
+    'Voice Cloning Pro': 0,
+    'Talking Image': 0
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -98,21 +98,23 @@ export default function AccountPage() {
 
   const fetchCredits = async () => {
     try {
-      const response = await fetch('/api/credits/balance')
+      const response = await fetch('/api/user/credits')
+      const data = await response.json()
       if (response.ok) {
-        const data = await response.json()
-        setCreditBalance(data.balance)
-      } else if (response.status === 404) {
-        console.warn('Credits API not implemented yet')
-        // Keep the default state for creditBalance
+        setCreditBalance({
+          common: data.credits.common,
+          'Text to Speech Pro': {
+            isSubscribed: data.credits['Text to Speech Pro'].isSubscribed,
+            subscriptionEndDate: data.credits['Text to Speech Pro'].subscriptionEndDate
+          },
+          'Voice Cloning Pro': data.credits['Voice Cloning Pro'],
+          'Talking Image': data.credits['Talking Image']
+        })
       } else {
-        throw new Error('Failed to fetch credits')
+        console.error('Failed to fetch credits:', data.error)
       }
     } catch (err) {
       console.error('An error occurred while fetching credits:', err)
-      // Don't set an error state, just keep the default credit balance
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -180,27 +182,26 @@ export default function AccountPage() {
                   </p>
 
                   <div className="text-lg">
-                    {creditBalance.ttsProSubscription.isSubscribed ? (
+                    {creditBalance['Text to Speech Pro'].isSubscribed ? (
                       <p>
-                        Text to Speech Pro - {' '}
-                        <span className="text-green-600">
-                          Subscribed (Valid until {' '}
-                          {creditBalance.ttsProSubscription.endDate 
-                            ? new Date(creditBalance.ttsProSubscription.endDate).toLocaleDateString()
-                            : 'N/A'})
+                        <span className="font-medium">Text to Speech Pro</span> - 
+                        <span className="ml-2 text-green-600">
+                          Unlimited Access (Valid until {new Date(creditBalance['Text to Speech Pro'].subscriptionEndDate!).toLocaleDateString()})
                         </span>
                       </p>
                     ) : (
-                      <p>Text to Speech Pro - Not Subscribed</p>
+                      <p>
+                        <span className="font-medium">Text to Speech Pro</span> - No active subscription
+                      </p>
                     )}
                   </div>
 
                   <p className="text-lg">
-                    {creditBalance.voiceCloning.toLocaleString()} Credits - Voice Cloning Pro
+                    <span className="font-medium">{creditBalance['Voice Cloning Pro'].toLocaleString()} Credits</span> - Voice Cloning Pro
                   </p>
 
                   <p className="text-lg">
-                    {creditBalance.talkingImage.toLocaleString()} Credits - Talking Image
+                    <span className="font-medium">{creditBalance['Talking Image'].toLocaleString()} Credits</span> - Talking Image
                   </p>
                 </div>
               </div>

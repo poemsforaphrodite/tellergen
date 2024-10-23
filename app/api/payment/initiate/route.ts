@@ -132,8 +132,8 @@ export async function POST(request: Request) {
 
   // Send the payment initiation request to PhonePe API
   try {
-    // Use test URL for now
-    const apiUrl = 'https://api-preprod.phonepe.com/apis/hermes/pg/v1/pay';
+    // Use production URL
+    const apiUrl = 'https://api.phonepe.com/apis/hermes/pg/v1/pay';
     console.log('Sending request to:', apiUrl);
 
     // Add subscription flag to the payload if it's a subscription product

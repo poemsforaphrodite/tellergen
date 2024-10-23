@@ -95,9 +95,9 @@ export async function POST(request: Request) {
       const charactersToAdd = 1000000; // For Text-to-Speech Pro and Voice Cloning Pro
 
       if (productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
-        // Calculate subscription end date (2 minutes from now)
+        // Calculate subscription end date (1 month from now)
         const subscriptionEndDate = new Date();
-        subscriptionEndDate.setMinutes(subscriptionEndDate.getMinutes() + 2);
+        subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
         
         // Update user's subscription status and end date
         await User.findByIdAndUpdate(
