@@ -12,13 +12,13 @@ export default function PricingPage() {
   const plans = [
     {
       title: "TellerGen Text to Speech Pro",
-      price: 499,
+      price: 999,
       features: [
-        "100+ Premium and Celebrity voices",
+        "Unlimited Hindi & English voices",
         "High quality audio download",
         "Ultra realistic voices",
-        "1 million characters",
-        "Unlimited Hindi characters"
+        "Monthly subscription",
+        "Unlimited characters"
       ]
     },
     {
@@ -27,8 +27,7 @@ export default function PricingPage() {
       features: [
         "Clone up to 1 million characters",
         "High quality audio",
-        "Ultra realistic cloned voice",
-        "Fast processing"
+        "Ultra realistic cloned voice"
       ]
     },
     {
@@ -44,7 +43,8 @@ export default function PricingPage() {
   ]
 
   const handleBuyPro = (product: string, price: number) => {
-    router.push(`/checkout?product=${product.toLowerCase().replace(/\s+/g, '_')}&price=${price}`);
+    const queryParams = `product=${encodeURIComponent(product)}&price=${price}&subscription=true`;
+    router.push(`/checkout?${queryParams}`);
   }
 
   return (
@@ -71,7 +71,7 @@ export default function PricingPage() {
                   onClick={() => handleBuyPro(plan.title, plan.price)} 
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
                 >
-                  {plan.title === "TellerGen Talking Image Pro" ? "Buy Talking Image" : "Buy Pro"}
+                  Buy Pro
                 </Button>
               </div>
             ))}

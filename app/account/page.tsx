@@ -30,20 +30,27 @@ interface User {
   }>;
 }
 
+// Update the CreditBalance type
 type CreditBalance = {
   common: number;
-  'Text to Speech Pro': number;
-  'Voice Cloning Pro': number;
-  'Talking Image': number;
+  ttsProSubscription: {
+    isSubscribed: boolean;
+    endDate: string | null;
+  };
+  voiceCloning: number;
+  talkingImage: number;
 };
 
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance>({
     common: 0,
-    'Text to Speech Pro': 0,
-    'Voice Cloning Pro': 0,
-    'Talking Image': 0
+    ttsProSubscription: {
+      isSubscribed: false,
+      endDate: null
+    },
+    voiceCloning: 0,
+    talkingImage: 0
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,20 +98,19 @@ export default function AccountPage() {
 
   const fetchCredits = async () => {
     try {
-      const response = await fetch('/api/user/credits')
-      const data = await response.json()
+      const response = await fetch('/api/credits/balance')
       if (response.ok) {
-        setCreditBalance({
-          common: data.credits.common,
-          'Text to Speech Pro': data.credits['Text to Speech Pro'],
-          'Voice Cloning Pro': data.credits['Voice Cloning Pro'],
-          'Talking Image': data.credits['Talking Image']
-        })
+        const data = await response.json()
+        setCreditBalance(data.balance)
+      } else if (response.status === 404) {
+        console.warn('Credits API not implemented yet')
+        // Keep the default state for creditBalance
       } else {
-        setError(data.error || 'Failed to fetch credits')
+        throw new Error('Failed to fetch credits')
       }
     } catch (err) {
-      setError('An error occurred while fetching credits')
+      console.error('An error occurred while fetching credits:', err)
+      // Don't set an error state, just keep the default credit balance
     } finally {
       setLoading(false)
     }
@@ -168,16 +174,35 @@ export default function AccountPage() {
 
               <div className="bg-indigo-50 rounded-lg p-4 md:p-6 shadow-inner">
                 <h3 className="text-xl font-semibold text-indigo-800 mb-4">Your Current Balance</h3>
-                <p className="text-2xl font-bold text-indigo-600 mb-4">
-                  {creditBalance.common.toLocaleString()} Common Credits
-                </p>
-                {Object.entries(creditBalance).map(([service, credits]) => (
-                  service !== 'common' && (
-                    <p key={service} className="text-lg">
-                      <span className="font-medium">{credits.toLocaleString()} Credits</span> - {service}
-                    </p>
-                  )
-                ))}
+                <div className="space-y-3">
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {creditBalance.common.toLocaleString()} Common Credits
+                  </p>
+
+                  <div className="text-lg">
+                    {creditBalance.ttsProSubscription.isSubscribed ? (
+                      <p>
+                        Text to Speech Pro - {' '}
+                        <span className="text-green-600">
+                          Subscribed (Valid until {' '}
+                          {creditBalance.ttsProSubscription.endDate 
+                            ? new Date(creditBalance.ttsProSubscription.endDate).toLocaleDateString()
+                            : 'N/A'})
+                        </span>
+                      </p>
+                    ) : (
+                      <p>Text to Speech Pro - Not Subscribed</p>
+                    )}
+                  </div>
+
+                  <p className="text-lg">
+                    {creditBalance.voiceCloning.toLocaleString()} Credits - Voice Cloning Pro
+                  </p>
+
+                  <p className="text-lg">
+                    {creditBalance.talkingImage.toLocaleString()} Credits - Talking Image
+                  </p>
+                </div>
               </div>
 
               <form onSubmit={handlePasswordChange} className="bg-white p-4 md:p-6 rounded-lg shadow-md">
