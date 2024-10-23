@@ -5,7 +5,6 @@ import { getUserIdFromRequest } from '@/lib/auth'
 
 // Define the type for updateQuery
 type UpdateQuery = {
-    textToSpeechCharacters?: number;
     voiceCloningCharacters?: number;
     credits?: number;
     talkingImageCharacters?: number;
@@ -21,7 +20,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { creditsUsed, creditType, language, useDefaultCredits } = await request.json()
+    const { creditsUsed, creditType, language } = await request.json()
 
     const user = await User.findById(userId)
 
@@ -32,14 +31,36 @@ export async function POST(request: Request) {
     const updateQuery: UpdateQuery = {};
 
     if (creditType === 'Text to Speech Pro') {
+      // Check if TTS subscription is active and not expired
+      const ttsSubscription = user.subscriptions?.textToSpeech;
+      const isSubscriptionActive = ttsSubscription?.active && 
+        ttsSubscription?.endDate && 
+        new Date(ttsSubscription.endDate) > new Date();
+
+      // If subscription has expired, update it in the database
+      if (ttsSubscription?.active && !isSubscriptionActive) {
+        await User.findByIdAndUpdate(
+          userId,
+          {
+            $set: {
+              'subscriptions.textToSpeech.active': false
+            }
+          }
+        );
+      }
+
+      // Don't deduct credits for Hindi text over 1000 characters
       if (language === 'hi' && creditsUsed > 1000) {
         return NextResponse.json({ success: true, message: 'No credits deducted for Hindi voice over 1000 characters' })
       }
+
+      // Skip credit deduction if subscription is active
+      if (isSubscriptionActive) {
+        return NextResponse.json({ success: true, message: 'No credits deducted - Active subscription' })
+      }
       
-      if (user.textToSpeechCharacters >= creditsUsed) {
-        updateQuery['textToSpeechCharacters'] = -creditsUsed;
-      } else if (useDefaultCredits && user.credits >= creditsUsed) {
-        // Use default credits if Text to Speech Pro credits are insufficient
+      // Deduct credits only if no active subscription
+      if (user.credits >= creditsUsed) {
         updateQuery['credits'] = -creditsUsed;
       } else {
         return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
@@ -47,8 +68,7 @@ export async function POST(request: Request) {
     } else if (creditType === 'Voice Cloning Pro') {
       if (user.voiceCloningCharacters >= creditsUsed) {
         updateQuery['voiceCloningCharacters'] = -creditsUsed;
-      } else if (useDefaultCredits && user.credits >= creditsUsed) {
-        // Use default credits if Voice Cloning Pro credits are insufficient
+      } else if (user.credits >= creditsUsed) {
         updateQuery['credits'] = -creditsUsed;
       } else {
         return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 })
@@ -78,7 +98,7 @@ export async function POST(request: Request) {
       const updatedUser = await User.findByIdAndUpdate(
         userId,
         { $inc: updateQuery },
-        { new: true, select: 'credits textToSpeechCharacters voiceCloningCharacters talkingImageCharacters' }
+        { new: true, select: 'credits voiceCloningCharacters talkingImageCharacters' }
       )
       return NextResponse.json({ success: true, credits: updatedUser })
     } else {

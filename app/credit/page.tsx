@@ -9,7 +9,10 @@ import { HomeIcon, CreditCardIcon, UserIcon } from "lucide-react"
 
 type CreditBalance = {
   common: number;
-  'Text to Speech Pro': number;
+  'Text to Speech Pro': {
+    isSubscribed: boolean;
+    subscriptionEndDate: Date | null;
+  };
   'Voice Cloning Pro': number;
   'Talking Image': number;
 };
@@ -17,7 +20,10 @@ type CreditBalance = {
 export default function CreditPage() {
   const [creditBalance, setCreditBalance] = useState<CreditBalance>({
     common: 0,
-    'Text to Speech Pro': 0,
+    'Text to Speech Pro': {
+      isSubscribed: false,
+      subscriptionEndDate: null
+    },
     'Voice Cloning Pro': 0,
     'Talking Image': 0
   })
@@ -51,7 +57,10 @@ export default function CreditPage() {
       if (response.ok) {
         setCreditBalance({
           common: data.credits.common,
-          'Text to Speech Pro': data.credits['Text to Speech Pro'],
+          'Text to Speech Pro': {
+            isSubscribed: data.credits['Text to Speech Pro'].isSubscribed,
+            subscriptionEndDate: data.credits['Text to Speech Pro'].subscriptionEndDate
+          },
           'Voice Cloning Pro': data.credits['Voice Cloning Pro'],
           'Talking Image': data.credits['Talking Image']
         })
@@ -103,13 +112,32 @@ export default function CreditPage() {
                 <p className="text-2xl font-bold text-indigo-600 mb-4">
                   {creditBalance.common.toLocaleString()} Common Credits
                 </p>
-                {Object.entries(creditBalance).map(([service, credits]) => (
-                  service !== 'common' && (
-                    <p key={service} className="text-lg">
-                      <span className="font-medium">{credits.toLocaleString()} Credits</span> - {service}
+                
+                {/* Text to Speech Pro */}
+                <div className="text-lg mb-2">
+                  {typeof creditBalance['Text to Speech Pro'] === 'object' && creditBalance['Text to Speech Pro'].isSubscribed ? (
+                    <p>
+                      <span className="font-medium">Text to Speech Pro</span> - 
+                      <span className="ml-2 text-green-600">
+                        Unlimited Access (Valid until {new Date(creditBalance['Text to Speech Pro'].subscriptionEndDate!).toLocaleDateString()})
+                      </span>
                     </p>
-                  )
-                ))}
+                  ) : (
+                    <p>
+                      <span className="font-medium">Text to Speech Pro</span> - No active subscription
+                    </p>
+                  )}
+                </div>
+
+                {/* Voice Cloning Pro */}
+                <p className="text-lg mb-2">
+                  <span className="font-medium">{creditBalance['Voice Cloning Pro'].toLocaleString()} Credits</span> - Voice Cloning Pro
+                </p>
+
+                {/* Talking Image */}
+                <p className="text-lg">
+                  <span className="font-medium">{creditBalance['Talking Image'].toLocaleString()} Credits</span> - Talking Image
+                </p>
               </div>
 
               <div className="bg-indigo-50 rounded-lg p-6 shadow-inner">

@@ -95,8 +95,25 @@ export async function POST(request: Request) {
       const charactersToAdd = 1000000; // For Text-to-Speech Pro and Voice Cloning Pro
 
       if (productName === PRODUCTS.TEXT_TO_SPEECH_PRO) {
-        user.textToSpeechCharacters = (user.textToSpeechCharacters || 0) + charactersToAdd;
-        console.log(`User Text-to-Speech characters updated: +${charactersToAdd} characters`);
+        // Calculate subscription end date (2 minutes from now)
+        const subscriptionEndDate = new Date();
+        subscriptionEndDate.setMinutes(subscriptionEndDate.getMinutes() + 2);
+        
+        // Update user's subscription status and end date
+        await User.findByIdAndUpdate(
+          user._id,
+          {
+            $set: {
+              'subscriptions.textToSpeech': {
+                active: true,
+                endDate: subscriptionEndDate
+              }
+            }
+          },
+          { new: true }
+        );
+        
+        console.log(`TTS Pro subscription activated until ${subscriptionEndDate}`);
       } else if (productName === PRODUCTS.VOICE_CLONING_PRO) {
         user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
         console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);

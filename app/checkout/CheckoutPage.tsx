@@ -9,8 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PRODUCTS } from '@/constants/products'; // Importing product constants
 
+type Product = {
+  name: string;
+  price: number;
+  credits?: number;
+  isSubscription?: boolean;
+};
+
 export default function CheckoutPage() {
-  const [product, setProduct] = useState<{ name: string; price: number; credits?: number } | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -25,6 +32,7 @@ export default function CheckoutPage() {
     if (searchParams) {
       const productQueryName = searchParams.get('product');
       const productPrice = searchParams.get('price');
+      const isSubscription = searchParams.get('subscription') === 'true';
 
       if (productQueryName && productPrice) {
         let mappedProductName = '';
@@ -32,7 +40,7 @@ export default function CheckoutPage() {
 
         if (productQueryName.toLowerCase().includes('text_to_speech_pro')) {
           mappedProductName = PRODUCTS.TEXT_TO_SPEECH_PRO;
-          price = 499; // Set price for Text to Speech Pro
+          price = 999; // Monthly subscription price
         } else if (productQueryName.toLowerCase().includes('voice_cloning_pro')) {
           mappedProductName = PRODUCTS.VOICE_CLONING_PRO;
           price = 499; // Set price for Voice Cloning Pro
@@ -76,6 +84,7 @@ export default function CheckoutPage() {
           name: mappedProductName,
           price: subtotal,
           credits: creditsValue,
+          isSubscription: isSubscription
         });
       } else {
         setError('Invalid product selection');
@@ -194,6 +203,7 @@ export default function CheckoutPage() {
                 <span className="text-gray-700">Product:</span>
                 <span className="font-medium">
                   {product.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {product.isSubscription ? ' (Monthly)' : ''}
                 </span>
               </div>
               <div className="flex justify-between mb-2">

@@ -47,8 +47,15 @@ export default function Home() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
   const [voiceCategories, setVoiceCategories] = useState<VoiceCategory[]>([]);
-  const [userTTSCredits, setUserTTSCredits] = useState<number>(0);
-  const [userCommonCredits, setUserCommonCredits] = useState<number>(0);
+  const [userTTSCredits, setUserTTSCredits] = useState<{
+    isSubscribed: boolean;
+    subscriptionEndDate: string | null;
+    isLocked: boolean;
+  }>({
+    isSubscribed: false,
+    subscriptionEndDate: null,
+    isLocked: false
+  });
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
 
   // **Added** separate state variables for audio files
@@ -84,7 +91,6 @@ export default function Home() {
       const data = await response.json();
       if (response.ok) {
         setUserTTSCredits(data.credits['Text to Speech Pro']);
-        setUserCommonCredits(data.credits.common);
       } else {
         console.error('Error fetching user credits:', data.error);
       }
@@ -404,11 +410,7 @@ export default function Home() {
   }
 
   const handleBuyPro = (product: string, price: number) => {
-    const queryParams = `product=${encodeURIComponent(product)}&price=${price}`;
-    
-    // No need to add credits parameter for Voice Cloning Pro
-    // as it will be handled the same as Text-to-Speech Pro
-    
+    const queryParams = `product=${encodeURIComponent(product)}&price=${price}&subscription=true`;
     router.push(`/checkout?${queryParams}`);
   }
 
@@ -633,9 +635,9 @@ export default function Home() {
                                 <option 
                                   key={index} 
                                   value={voice.name} 
-                                  disabled={userTTSCredits <= 1000 && userCommonCredits <= 1000 && !voice.is_free}
+                                  disabled={userTTSCredits.isLocked && !voice.is_free}
                                 >
-                                  {voice.name} {userTTSCredits <= 1000 && userCommonCredits <= 1000 && !voice.is_free ? '🔒' : ''}
+                                  {voice.name} {userTTSCredits.isLocked && !voice.is_free ? '🔒' : ''}
                                 </option>
                               ))}
                             </select>
@@ -980,11 +982,12 @@ export default function Home() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { title: "TellerGen Text to Speech Pro", price: 499, features: [
-                  "100+ Premium and Celebrity voices",
+                { title: "TellerGen Text to Speech Pro", price: 999, features: [
+                  "Unlimited Hindi & English voices",
                   "High quality audio download",
                   "Ultra realistic voices",
-                  "1 million characters",
+                  "Monthly subscription",
+                  "Unlimited characters"
                 ]},
                 { title: "TellerGen Voice Cloning Pro", price: 499, features: [
                   "Clone up to 1 million characters",
