@@ -514,6 +514,13 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900">
       <header className="bg-white shadow-md sticky top-0 z-10">
+        {/* Add the promotional banner */}
+        <div className="bg-indigo-600 text-white text-center py-2 px-4">
+          <p className="text-sm font-medium">
+            Limited time offer: Get unlimited text to speech at just Rs 199! 🎉
+          </p>
+        </div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Link href="/home" className="flex items-center">
@@ -982,7 +989,7 @@ export default function Home() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { title: "TellerGen Text to Speech Pro", price: 999, features: [
+                { title: "TellerGen Text to Speech Pro", price: 199, features: [
                   "Unlimited Hindi & English voices",
                   "High quality audio download",
                   "Ultra realistic voices",

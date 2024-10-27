@@ -12,7 +12,7 @@ export default function PricingPage() {
   const plans = [
     {
       title: "TellerGen Text to Speech Pro",
-      price: 999,
+      price: 199,
       features: [
         "Unlimited Hindi & English voices",
         "High quality audio download",

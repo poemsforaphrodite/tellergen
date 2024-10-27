@@ -40,7 +40,7 @@ export default function CheckoutPage() {
 
         if (productQueryName.toLowerCase().includes('text_to_speech_pro')) {
           mappedProductName = PRODUCTS.TEXT_TO_SPEECH_PRO;
-          price = 999; // Monthly subscription price
+          price = 199; // Monthly subscription price
         } else if (productQueryName.toLowerCase().includes('voice_cloning_pro')) {
           mappedProductName = PRODUCTS.VOICE_CLONING_PRO;
           price = 499; // Set price for Voice Cloning Pro
