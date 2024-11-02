@@ -2,121 +2,108 @@ import { NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
 import BaseVoice from '@/models/BaseVoice'
 import fetch from 'node-fetch'
+import path from 'path'
 
-const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
-const REPLICATE_API_URL = 'https://api.replicate.com/v1/predictions';
+const SERVER_IP = '39.114.73.97'
+const PORT = '34123'
+const BASE_URL = `http://${SERVER_IP}:${PORT}`
 
-interface ReplicateResponse {
-  id: string;
-  // Add other properties as needed
-}
+async function uploadVoiceSample(file: Blob, filename: string): Promise<boolean> {
+  const formData = new FormData()
+  const wavFilename = filename.replace(/\.[^/.]+$/, '.wav')
+  formData.append('wavFile', file, wavFilename)
 
-async function waitForReplicateJob(jobId: string): Promise<any> {
-  const maxAttempts = 60; // Maximum number of attempts (10 minutes with 10-second intervals)
-  let attempts = 0;
+  const response = await fetch(`${BASE_URL}/upload_sample`, {
+    method: 'POST',
+    body: formData,
+  })
 
-  while (attempts < maxAttempts) {
-    const response = await fetch(`${REPLICATE_API_URL}/${jobId}`, {
-      headers: {
-        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (typeof result === 'object' && result !== null && 'status' in result) {
-      if (result.status === 'succeeded') {
-        return result;
-      } else if (result.status === 'failed') {
-        throw new Error('Job failed: ' + ((result as any).error || 'Unknown error'));
-      }
-    }
-
-    // Wait for 10 seconds before the next attempt
-    await new Promise(resolve => setTimeout(resolve, 10000));
-    attempts++;
+  if (response.ok) {
+    console.log('Voice sample uploaded successfully')
+    return true
+  } else {
+    console.error('Error uploading voice sample:', response.status, await response.text())
+    return false
   }
-
-  throw new Error('Job timed out');
-}
-
-async function fetchAndConvertToBase64(url: string): Promise<string> {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  return buffer.toString('base64');
 }
 
 export async function POST(request: Request) {
   const formData = await request.formData()
   const text = formData.get('text') as string
   const voice = formData.get('voice') as string
-  const language = formData.get('language') as string
+  const language = (formData.get('language') as string) || 'en'
 
   console.log('Received request:', { text, voice, language })
 
   try {
-    await dbConnect();
+    await dbConnect()
 
     // Find the voice in the BaseVoice collection
-    const voiceCategory = await BaseVoice.findOne({ 'voices.name': voice });
+    const voiceCategory = await BaseVoice.findOne({ 'voices.name': voice })
     if (!voiceCategory) {
-      throw new Error(`Voice not found: ${voice}`);
+      throw new Error(`Voice not found: ${voice}`)
     }
 
-    const voiceData = voiceCategory.voices.find((v: { name: string; file_url?: string }) => v.name === voice);
+    const voiceData = voiceCategory.voices.find(
+      (v: { name: string; file_url?: string }) => v.name === voice
+    )
     if (!voiceData || !voiceData.file_url) {
-      throw new Error(`Voice data or file URL not found for voice: ${voice}`);
+      throw new Error(`Voice data or file URL not found for voice: ${voice}`)
     }
 
-    // Fetch the audio file and convert it to base64
-    const base64Audio = await fetchAndConvertToBase64(voiceData.file_url);
+    // Download the voice file from the URL
+    const voiceResponse = await fetch(voiceData.file_url)
+    if (!voiceResponse.ok) {
+      throw new Error(`Failed to fetch voice file: ${voiceResponse.statusText}`)
+    }
+    const voiceBlob = await voiceResponse.blob()
 
-    const response = await fetch(REPLICATE_API_URL, {
+    // Get filename and ensure it has .wav extension
+    const originalFilename = path.basename(voiceData.file_url)
+    const wavFilename = originalFilename.replace(/\.[^/.]+$/, '.wav')
+
+    // Upload the voice sample to FastAPI server
+    const uploadSuccess = await uploadVoiceSample(voiceBlob, wavFilename)
+    if (!uploadSuccess) {
+      throw new Error('Failed to upload voice sample')
+    }
+
+    // Generate TTS audio using FastAPI server
+    const response = await fetch(`${BASE_URL}/tts_to_audio/`, {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        version: "684bc3855b37866c0c65add2ff39c78f3dea3f4ff103a436465326e0f438d55e",
-        input: {
-          speaker: `data:audio/wav;base64,${base64Audio}`,
-          text: text,
-          language: language,
-          cleanup_voice: false
-        }
-      })
-    });
+        text,
+        speaker_wav: wavFilename,
+        language,
+      }),
+    })
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error('Error generating audio:', response.status, await response.text())
+      return NextResponse.json({ error: 'Failed to generate TTS audio.' }, { status: 500 })
     }
 
-    const initialResult = await response.json() as ReplicateResponse;
-    console.log('Initial Replicate response:', initialResult);
+    const contentType = response.headers.get('Content-Type') || 'application/octet-stream'
+    const buffer = await response.arrayBuffer()
 
-    // Wait for the job to complete
-    const finalResult = await waitForReplicateJob(initialResult.id);
-    console.log('Final Replicate result:', finalResult);
-
-    if (finalResult.output && typeof finalResult.output === 'string' && finalResult.output.startsWith('http')) {
-      console.log('Returning audio URL:', finalResult.output);
-      return NextResponse.json({ audioUrl: finalResult.output });
-    } else {
-      console.error('Invalid output from Replicate:', finalResult);
-      throw new Error("Failed to generate audio: Invalid output from Replicate");
-    }
+    return new NextResponse(buffer, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Content-Disposition': 'attachment; filename="generated_audio.wav"',
+      },
+    })
   } catch (error) {
-    console.error("Error in TTS API:", error);
-    return NextResponse.json({ 
-      error: "Failed to generate audio: " + (error as Error).message,
-      details: error instanceof Error ? error.stack : undefined
-    }, { status: 500 });
+    console.error('Error in TTS API:', error)
+    return NextResponse.json(
+      {
+        error: 'Failed to generate audio: ' + (error as Error).message,
+        details: error instanceof Error ? error.stack : undefined,
+      },
+      { status: 500 }
+    )
   }
 }

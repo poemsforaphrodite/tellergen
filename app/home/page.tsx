@@ -296,38 +296,34 @@ export default function Home() {
       console.log("Response status:", response.status);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text()
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
       }
 
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers.get("Content-Type") || "application/octet-stream";
       console.log("Content-Type:", contentType);
 
-      if (contentType && contentType.includes("application/json")) {
-        const result = await response.json();
-        console.log("JSON result:", result);
-
-        if (activeTab === "TTS" || activeTab === "Clone voice") {
-          if (result && typeof result === 'object' && 'audioUrl' in result) {
-            console.log("Setting generated audio URL:", result.audioUrl);
-            setGeneratedAudio(result.audioUrl);
-            setAudioSrc(result.audioUrl); // Set the audio source
-          } else {
-            console.error("Unexpected JSON response format:", result);
-            throw new Error("Failed to generate audio: Unexpected JSON response format");
-          }
-        } else if (activeTab === "Talking Image") {
-          if (result.videoData) {
-            setGeneratedVideo(result.videoData);
-          } else {
-            throw new Error(result.error || "Failed to generate video.");
-          }
-        }
-      } else if (contentType && contentType.includes("audio/")) {
+      if (contentType.includes("audio/")) {
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
         console.log("Setting generated audio URL:", audioUrl);
         setGeneratedAudio(audioUrl);
         setAudioSrc(audioUrl); // Set the audio source
+      } else if (contentType.includes("application/json")) {
+        const result = await response.json();
+        console.log("JSON result:", result);
+
+        if (activeTab === "Talking Image") {
+          if (result.videoData) {
+            setGeneratedVideo(result.videoData);
+            // Deduct credits
+            // ... (credits deduction logic remains the same)
+          } else {
+            throw new Error(result.error || "Failed to generate talking image video.");
+          }
+        } else {
+          throw new Error("Unexpected response format.");
+        }
       } else {
         console.error("Unexpected content type:", contentType);
         throw new Error("Failed to generate audio: Unexpected content type");
