@@ -22,7 +22,7 @@ type VoiceCategory = {
 };
 
 // Add this constant at the top of your component or in a separate constants file
-const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट करने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
+const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट ��रने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
@@ -296,38 +296,34 @@ export default function Home() {
       console.log("Response status:", response.status);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text()
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
       }
 
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers.get("Content-Type") || "application/octet-stream";
       console.log("Content-Type:", contentType);
 
-      if (contentType && contentType.includes("application/json")) {
-        const result = await response.json();
-        console.log("JSON result:", result);
-
-        if (activeTab === "TTS" || activeTab === "Clone voice") {
-          if (result && typeof result === 'object' && 'audioUrl' in result) {
-            console.log("Setting generated audio URL:", result.audioUrl);
-            setGeneratedAudio(result.audioUrl);
-            setAudioSrc(result.audioUrl); // Set the audio source
-          } else {
-            console.error("Unexpected JSON response format:", result);
-            throw new Error("Failed to generate audio: Unexpected JSON response format");
-          }
-        } else if (activeTab === "Talking Image") {
-          if (result.videoData) {
-            setGeneratedVideo(result.videoData);
-          } else {
-            throw new Error(result.error || "Failed to generate video.");
-          }
-        }
-      } else if (contentType && contentType.includes("audio/")) {
+      if (contentType.includes("audio/")) {
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
         console.log("Setting generated audio URL:", audioUrl);
         setGeneratedAudio(audioUrl);
         setAudioSrc(audioUrl); // Set the audio source
+      } else if (contentType.includes("application/json")) {
+        const result = await response.json();
+        console.log("JSON result:", result);
+
+        if (activeTab === "Talking Image") {
+          if (result.videoData) {
+            setGeneratedVideo(result.videoData);
+            // Deduct credits
+            // ... (credits deduction logic remains the same)
+          } else {
+            throw new Error(result.error || "Failed to generate talking image video.");
+          }
+        } else {
+          throw new Error("Unexpected response format.");
+        }
       } else {
         console.error("Unexpected content type:", contentType);
         throw new Error("Failed to generate audio: Unexpected content type");
@@ -519,18 +515,18 @@ export default function Home() {
       {/* Server Downtime Notice */}
       {showDowntimeNotice && (
         <div className="bg-red-500 text-white py-2 px-4 relative">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="max-w-7xl mx-auto flex items-center justify-center">
             <div className="flex items-center">
               <svg className="w-6 h-6 mr-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <p className="font-medium">
-                Scheduled maintenance: Our servers will be down for maintenance on Saturday, 2nd November, from 2 PM to 6 PM IST.
+                Notice: Hindi category and Talking Image feature are currently under maintenance.
               </p>
             </div>
             <button 
               onClick={() => setShowDowntimeNotice(false)}
-              className="text-white hover:text-red-100 transition-colors"
+              className="ml-4 text-white hover:text-red-100 transition-colors"
             >
               <XIcon className="h-5 w-5" />
             </button>
