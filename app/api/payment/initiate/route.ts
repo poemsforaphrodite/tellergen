@@ -138,7 +138,7 @@ export async function POST(request: Request) {
 
     // Add subscription flag to the payload if it's a subscription product
     if (productName?.toLowerCase().includes('_pro')) {
-      decodedPayload.isSubscription = true;
+      decodedPayload.isSubscription = true; 
       decodedPayload.subscriptionFrequency = 'MONTHLY';
     }
 

@@ -62,23 +62,16 @@ export async function POST(request: Request) {
     const originalFilename = path.basename(voiceData.file_url)
     const wavFilename = originalFilename.replace(/\.[^/.]+$/, '.wav')
 
-    // Upload the voice sample to FastAPI server
-    const uploadSuccess = await uploadVoiceSample(voiceBlob, wavFilename)
-    if (!uploadSuccess) {
-      throw new Error('Failed to upload voice sample')
-    }
-
-    // Generate TTS audio using FastAPI server
-    const response = await fetch(`${BASE_URL}/tts_to_audio/`, {
+    // Modified API call structure to match the example
+    const response = await fetch(`http://69.158.70.163:43480/tts/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text,
-        speaker_wav: wavFilename,
-        language,
-      }),
+      body: (() => {
+        const formData = new FormData()
+        formData.append('voice_file', voiceBlob, wavFilename)
+        formData.append('text', text)
+        formData.append('language', language)
+        return formData
+      })(),
     })
 
     if (!response.ok) {
