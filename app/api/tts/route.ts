@@ -4,28 +4,6 @@ import NewVoice from '@/models/NewVoice'
 import fetch from 'node-fetch'
 import path from 'path'
 
-const SERVER_IP = '39.114.73.97'
-const PORT = '34123'
-const BASE_URL = `http://${SERVER_IP}:${PORT}`
-
-async function uploadVoiceSample(file: Blob, filename: string): Promise<boolean> {
-  const formData = new FormData()
-  const wavFilename = filename.replace(/\.[^/.]+$/, '.wav')
-  formData.append('wavFile', file, wavFilename)
-
-  const response = await fetch(`${BASE_URL}/upload_sample`, {
-    method: 'POST',
-    body: formData,
-  })
-
-  if (response.ok) {
-    console.log('Voice sample uploaded successfully')
-    return true
-  } else {
-    console.error('Error uploading voice sample:', response.status, await response.text())
-    return false
-  }
-}
 
 export async function POST(request: Request) {
   const formData = await request.formData()
