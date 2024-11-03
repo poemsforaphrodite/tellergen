@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import BaseVoice from '@/models/BaseVoice';
+import NewVoice from '@/models/NewVoice';
 
 export async function GET() {
   await dbConnect();
 
   try {
-    const categories = await BaseVoice.find({}).select('category voices._id voices.name voices.file_url voices.is_free');
+    const categories = await NewVoice.find({}).select('category voices._id voices.name voices.file_url voices.is_free');
     
     if (!categories || categories.length === 0) {
       return NextResponse.json({ message: 'No voice categories found' }, { status: 404 });

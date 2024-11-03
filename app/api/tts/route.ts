@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
-import BaseVoice from '@/models/BaseVoice'
+import NewVoice from '@/models/NewVoice'
 import fetch from 'node-fetch'
 import path from 'path'
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     await dbConnect()
 
     // Find the voice in the BaseVoice collection
-    const voiceCategory = await BaseVoice.findOne({ 'voices.name': voice })
+    const voiceCategory = await NewVoice.findOne({ 'voices.name': voice })
     if (!voiceCategory) {
       throw new Error(`Voice not found: ${voice}`)
     }
