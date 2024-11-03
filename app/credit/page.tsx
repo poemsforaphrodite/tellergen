@@ -80,17 +80,6 @@ export default function CreditPage() {
     { service: "Talking Image", value: "10 seconds = 1 Credit" }
   ]
 
-  const purchaseOptions = [
-    { credits: 1000, price: 10 },
-    { credits: 4000, price: 30 },
-    { credits: 7000, price: 50 },
-    { credits: 12000, price: 100 },
-  ]
-
-  const handlePurchase = (credits: number, price: number) => {
-    router.push(`/checkout?product=${credits}_credits&price=${price}`);
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900 p-4 pb-16">
       <Card className="max-w-4xl mx-auto backdrop-blur-md bg-white/90 shadow-lg">
@@ -147,21 +136,6 @@ export default function CreditPage() {
                     <span className="font-medium">{service}</span> - {value}
                   </p>
                 ))}
-              </div>
-
-              <div>
-                <h3 className="text-2xl font-semibold text-indigo-800 mb-4">Purchase Credits:</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {purchaseOptions.map(({ credits, price }) => (
-                    <Button 
-                      key={credits} 
-                      onClick={() => handlePurchase(credits, price)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-lg py-6"
-                    >
-                      Buy {credits.toLocaleString()} Credits - Rs {price}
-                    </Button>
-                  ))}
-                </div>
               </div>
             </>
           )}

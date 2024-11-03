@@ -22,7 +22,7 @@ type VoiceCategory = {
 };
 
 // Add this constant at the top of your component or in a separate constants file
-const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट ��रने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
+const defaultHindiText = "यह डिफॉल्ट हिंदी पाठ है। वॉइस जेनरेट रने के लिए शब्दों को ज्यादा से ज्यादा पैराग्राफ में रखें। बेहतर परिणाम के लिए एक पैराग्राफ में केवल बीस से पच्चीस शब्द ही रखें अन्यथा वॉइस में खराबी आ सकती है।";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("TTS")
@@ -1004,47 +1004,94 @@ export default function Home() {
 
         {/* Pricing Plans */}
         <Card className="backdrop-blur-md bg-white/90 shadow-lg">
-          <CardHeader>
+          <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold text-indigo-800">Our Pro Plans</CardTitle>
+            <p className="text-gray-600 mt-2">Choose the perfect plan for your needs</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { title: "TellerGen Text to Speech Pro", price: 199, features: [
-                  "Unlimited Hindi & English voices",
-                  "High quality audio download",
-                  "Ultra realistic voices",
-                  "Monthly subscription",
-                  "Unlimited characters"
-                ]},
-                { title: "TellerGen Voice Cloning Pro", price: 499, features: [
-                  "Clone up to 1 million characters",
-                  "High quality audio",
-                  "Ultra realistic cloned voice"
-                ]},
-                { title: "TellerGen Talking Image Pro", price: 999, features: [
-                  "Up to 60 minutes of video generation",
-                  "High quality image to video",
-                  "Realistic head movement",
-                  "Perfect lip syncing"
-                ]}
+                { 
+                  title: "TellerGen Text to Speech Pro",
+                  price: 199,
+                  duration: "/month",
+                  features: [
+                    "Unlimited Hindi & English voices",
+                    "High quality audio download",
+                    "Ultra realistic voices",
+                    "Monthly subscription",
+                    "Unlimited characters"
+                  ],
+                  highlight: true,
+                  isSubscription: true
+                },
+                { 
+                  title: "TellerGen Voice Cloning Pro",
+                  price: 199,
+                  duration: "",  // Removed /month
+                  features: [
+                    "Clone up to 300,000 characters",
+                    "High quality audio",
+                    "Ultra realistic cloned voice",
+                    "One-time payment",
+                    "24/7 support"
+                  ],
+                  highlight: true,
+                  isSubscription: false
+                },
+                { 
+                  title: "TellerGen Talking Image Pro",
+                  price: 299,
+                  duration: "", // Removed /month
+                  features: [
+                    "Up to 60 minutes of video generation",
+                    "High quality image to video",
+                    "Realistic head movement",
+                    "One-time payment",
+                    "Priority processing"
+                  ],
+                  highlight: false,
+                  isSubscription: false
+                }
               ].map((plan, index) => (
-                <div key={index} className="bg-indigo-50 p-6 rounded-lg shadow-md space-y-4">
-                  <h3 className="text-xl font-semibold text-indigo-800">{plan.title}</h3>
-                  <ul className="space-y-2">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center text-gray-700">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} 
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
-                  >
-                    Buy Pro (Rs {plan.price})
-                  </Button>
+                <div 
+                  key={index} 
+                  className={`relative rounded-2xl overflow-hidden transition-transform hover:scale-105 ${
+                    plan.highlight 
+                      ? 'bg-gradient-to-b from-indigo-50 to-white border-2 border-indigo-500 shadow-xl' 
+                      : 'bg-white border border-gray-200 shadow-lg'
+                  }`}
+                >
+                  {plan.highlight && (
+                    <div className="absolute top-0 right-0 bg-indigo-500 text-white px-3 py-1 rounded-bl-lg text-sm font-medium">
+                      Popular
+                    </div>
+                  )}
+                  <div className="p-6 space-y-4">
+                    <h3 className="text-xl font-bold text-indigo-800">{plan.title}</h3>
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-bold text-indigo-600">₹{plan.price}</span>
+                      <span className="text-gray-500 ml-1">{plan.duration}</span>
+                    </div>
+                    <ul className="space-y-3 py-4">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-center text-gray-700">
+                          <CheckIcon className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button 
+                      onClick={() => handleBuyPro(plan.title.toLowerCase().replace(/\s+/g, '_'), plan.price)} 
+                      className={`w-full ${
+                        plan.highlight 
+                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
+                          : 'bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50'
+                      }`}
+                    >
+                      Get Started
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

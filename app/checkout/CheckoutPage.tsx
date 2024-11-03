@@ -32,7 +32,7 @@ export default function CheckoutPage() {
     if (searchParams) {
       const productQueryName = searchParams.get('product');
       const productPrice = searchParams.get('price');
-      const isSubscription = searchParams.get('subscription') === 'true';
+      let isSubscription = searchParams.get('subscription') === 'true';
 
       if (productQueryName && productPrice) {
         let mappedProductName = '';
@@ -41,12 +41,15 @@ export default function CheckoutPage() {
         if (productQueryName.toLowerCase().includes('text_to_speech_pro')) {
           mappedProductName = PRODUCTS.TEXT_TO_SPEECH_PRO;
           price = 199; // Monthly subscription price
+          isSubscription = true;
         } else if (productQueryName.toLowerCase().includes('voice_cloning_pro')) {
           mappedProductName = PRODUCTS.VOICE_CLONING_PRO;
-          price = 499; // Set price for Voice Cloning Pro
+          price = 199; // One-time payment
+          isSubscription = false;
         } else if (productQueryName.toLowerCase().includes('talking_image_pro')) {
           mappedProductName = PRODUCTS.TALKING_IMAGE_PRO;
-          price = 999; // Updated price for Talking Image Pro
+          price = 299; // One-time payment
+          isSubscription = false;
         } else if (productQueryName.toLowerCase().includes('combo_pack')) {
           mappedProductName = PRODUCTS.COMBO_PACK;
           price = 999; // Set price for Combo Pack

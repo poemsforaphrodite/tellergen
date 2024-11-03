@@ -115,11 +115,12 @@ export async function POST(request: Request) {
         
         console.log(`TTS Pro subscription activated until ${subscriptionEndDate}`);
       } else if (productName === PRODUCTS.VOICE_CLONING_PRO) {
+        const charactersToAdd = 300000; // 300k characters
         user.voiceCloningCharacters = (user.voiceCloningCharacters || 0) + charactersToAdd;
         console.log(`User Voice Cloning characters updated: +${charactersToAdd} characters`);
       } else if (productName === PRODUCTS.TALKING_IMAGE_PRO) {
-        user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 360; // Updated to 3600 (60 minutes * 60 seconds)
-        console.log(`User Talking Image characters updated: +360 characters`);
+        user.talkingImageCharacters = (user.talkingImageCharacters || 0) + 360; // 360 seconds (6 minutes)
+        console.log(`User Talking Image characters updated: +360 seconds`);
       } else if (normalizedProductName === PRODUCTS.CREDITS_1000.toLowerCase()) {
         creditsToAdd = 1000;
         console.log(`User received ${creditsToAdd} credits`);
@@ -150,8 +151,8 @@ export async function POST(request: Request) {
       const creditUrl = new URL('/credit', baseUrl);
       creditUrl.searchParams.set('paymentSuccess', 'true');
 
-      if (roundedBaseAmount === 499 || roundedBaseAmount === 999) {
-        creditUrl.searchParams.set('characters', roundedBaseAmount === 999 ? '360' : '1000000');
+      if (roundedBaseAmount === 199 || roundedBaseAmount === 299) {
+        creditUrl.searchParams.set('characters', roundedBaseAmount === 299 ? '360' : '300000');
         creditUrl.searchParams.set('product', transaction.productName);
       } else if (creditsToAdd !== undefined) {
         creditUrl.searchParams.set('credits', creditsToAdd.toString());
