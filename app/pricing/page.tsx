@@ -23,11 +23,12 @@ export default function PricingPage() {
     },
     {
       title: "TellerGen Voice Cloning Pro",
-      price: 499,
+      price: 99,
       features: [
         "Clone up to 1 million characters",
         "High quality audio",
-        "Ultra realistic cloned voice"
+        "Ultra realistic cloned voice",
+        "Monthly subscription"
       ]
     },
     {

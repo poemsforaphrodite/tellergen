@@ -1,47 +1,64 @@
 import { NextResponse } from 'next/server';
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
-import { initializeApp } from "firebase/app";
-import { firebaseConfig } from '@/lib/firebaseConfig';
+import { createClient } from '@supabase/supabase-js';
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+);
 
 export async function POST(request: Request) {
-  const { email, password } = await request.json();
-  console.log('Login attempt:', { email }); // Don't log passwords
-
   try {
-    // Verify the email and password with Firebase
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    const { event, session } = await request.json();
 
-    await dbConnect();
-    const dbUser = await User.findOne({ email: user.email });
+    if (event === 'SIGNED_IN') {
+      const user = session?.user;
+      if (!user) throw new Error('No user in session');
 
-    if (!dbUser) {
-      return NextResponse.json({ success: false, message: 'User not found in database' }, { status: 404 });
+      // Check if user exists in users table
+      const { data: userData, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+
+      if (!userData) {
+        // Create new user if they don't exist
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: user.id,
+              email: user.email,
+              credits: 10000,
+              name: user.user_metadata?.full_name,
+              avatar_url: user.user_metadata?.avatar_url
+            }
+          ]);
+
+        if (insertError) throw insertError;
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Login successful',
+        user
+      });
     }
 
-    // Set a cookie with the user's MongoDB _id
-    const response = NextResponse.json({ 
-      success: true, 
-      message: 'Login successful',
-      uid: user.uid // Send the Firebase UID back to the client
-    });
-    response.cookies.set('token', dbUser._id.toString(), { httpOnly: true, secure: true, sameSite: 'strict', path: '/' });
-    return response;
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Invalid event' 
+    }, { status: 400 });
 
   } catch (error: any) {
-    console.error('Login error:', error.code, error.message);
-    
-    // Handle specific Firebase Auth errors
-    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-      return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
-    }
-
-    return NextResponse.json({ success: false, message: 'An error occurred during login' }, { status: 500 });
+    console.error('Login error:', error);
+    return NextResponse.json({ 
+      success: false, 
+      message: error.message || 'Authentication failed' 
+    }, { status: 401 });
   }
 }
