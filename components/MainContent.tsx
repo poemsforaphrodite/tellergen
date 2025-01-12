@@ -47,6 +47,9 @@ export function MainContent() {
   const [cloneError, setCloneError] = useState<string | null>(null)
   const [clonedAudioUrl, setClonedAudioUrl] = useState<string | null>(null)
 
+  const [generatingAudio, setGeneratingAudio] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
+
   useEffect(() => {
     const fetchVoices = async () => {
       setLoading(true)
@@ -111,6 +114,95 @@ export function MainContent() {
       setIsPlaying(false);
     }
   }
+
+  const handleGenerateSpeech = async () => {
+    setGeneratingAudio(true);
+    setGenerationError(null);
+
+    try {
+      if (!selectedVoice) {
+        throw new Error('Please select a voice first');
+      }
+
+      const formData = new FormData();
+      formData.append('text', text);
+      formData.append('language', 'en');
+      
+      // Get the audio file from the voice URL
+      try {
+        const audioResponse = await fetch(selectedVoice.file_url);
+        const audioBlob = await audioResponse.blob();
+        formData.append('audio_file', audioBlob, 'voice.wav');
+      } catch (error) {
+        throw new Error('Failed to load voice sample. Please try again.');
+      }
+
+      const response = await fetch('/api/clone', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate speech.');
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (error: any) {
+      setGenerationError(error.message);
+      console.error('Speech generation error:', error);
+    } finally {
+      setGeneratingAudio(false);
+    }
+  }
+
+  // Handle voice cloning submission
+  const handleCloneVoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCloneLoading(true);
+    setCloneError(null);
+    
+    try {
+      if (!audioFile) {
+        throw new Error('Please upload an audio file');
+      }
+
+      const formData = new FormData();
+      formData.append('text', cloneText);
+      formData.append('audio_file', audioFile);
+
+      const response = await fetch('/api/clone', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to clone voice');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      setClonedAudioUrl(url);
+    } catch (err: any) {
+      setCloneError(err.message);
+    } finally {
+      setCloneLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAudioFile(e.target.files[0]);
+    }
+  };
 
   // Handle voice cloning form submission
   const handleCloneSubmit = async (e: React.FormEvent) => {
@@ -222,11 +314,20 @@ export function MainContent() {
                 <span className="text-sm text-muted-foreground">
                   {text.length} / {maxLength}
                 </span>
-                <Button className="h-8" disabled={!text.length}>
-                  Generate speech
+                <Button 
+                  className="h-8" 
+                  disabled={!text.length || !selectedVoice || generatingAudio}
+                  onClick={handleGenerateSpeech}
+                >
+                  {generatingAudio ? 'Generating...' : 'Generate speech'}
                 </Button>
               </div>
             </div>
+            {generationError && (
+              <div className="mt-2 text-sm text-red-500">
+                {generationError}
+              </div>
+            )}
           </div>
 
 

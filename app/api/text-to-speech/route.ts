@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     // };
 
     // Send the POST request to the external API
-    const response = await fetch('https://tellergen.com/api/clone-voice', {
+    const response = await fetch('https://tellergen.com/api/clone', {
       method: 'POST',
       body: payload,
       // headers, // Uncomment if using headers

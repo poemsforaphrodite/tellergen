@@ -202,7 +202,7 @@ export default function Home() {
       }
 
       const endpoint = activeTab === "Voice Cloning"
-        ? "/api/voice-clone"
+        ? "/api/clone"
         : "/api/text-to-speech";
 
       if (activeTab === "Voice Cloning") {

@@ -7,19 +7,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import { CreditCard, Key, User, BarChart, BookOpen, FileText, LogOut, DollarSign, Mic, VideoIcon, MessageSquare, Settings2 } from 'lucide-react'
-import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 const navigation = {
   create: [
@@ -40,7 +35,10 @@ const navigation = {
   ]
 }
 
+const supabase = createClientComponentClient()
+
 export function Sidebar() {
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [credits, setCredits] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,18 +47,17 @@ export function Sidebar() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Get current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) throw sessionError
+        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
+        if (userError) throw userError
 
-        if (session?.user) {
-          setUser(session.user)
+        if (currentUser) {
+          setUser(currentUser)
           
           // Fetch user credits
           const { data: userData, error: creditsError } = await supabase
             .from('users')
             .select('credits')
-            .eq('id', session.user.id)
+            .eq('id', currentUser.id)
             .single()
             
           if (creditsError) throw creditsError
@@ -76,7 +73,6 @@ export function Sidebar() {
 
     fetchUserData()
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user)
@@ -86,7 +82,7 @@ export function Sidebar() {
           .eq('id', session.user.id)
           .single()
           
-        if (!creditsError) {
+        if (!creditsError && userData) {
           setCredits(userData.credits)
         }
       } else {
@@ -101,12 +97,40 @@ export function Sidebar() {
   }, [])
 
   const handleSignOut = async () => {
+    console.log('Sign out clicked')
     try {
+      // First try server-side sign out
+      console.log('Attempting server-side sign out...')
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Server-side sign out failed')
+      }
+
+      // Then clear client-side auth
+      console.log('Attempting to sign out from Supabase...')
       const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      if (error) {
+        console.error('Supabase sign out error:', error)
+        throw error
+      }
+      console.log('Supabase sign out successful')
+
+      // Force a router refresh to update server-side state
+      console.log('Refreshing router...')
+      router.refresh()
+      
+      // Redirect to login page
+      console.log('Redirecting to login page...')
       window.location.href = '/login'
     } catch (err) {
       console.error('Sign out error:', err)
+      alert('Failed to sign out. Please try again.')
     }
   }
 
@@ -179,13 +203,18 @@ export function Sidebar() {
         <div className="p-4 border-t">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start">
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium">
-                    {user?.user_metadata?.full_name ?? 'User'}
+              <Button variant="ghost" className="w-full justify-start px-2 py-1.5">
+                <Avatar className="h-6 w-6 mr-2">
+                  <AvatarFallback>
+                    {user?.email ? user.email[0].toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col items-start overflow-hidden">
+                  <span className="text-sm font-medium truncate w-full">
+                    {user?.email?.split('@')[0]}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    My Workspace
+                  <span className="text-xs text-muted-foreground truncate w-full">
+                    {user?.email}
                   </span>
                 </div>
               </Button>
@@ -242,7 +271,10 @@ export function Sidebar() {
               <DropdownMenuSeparator />
               
               <DropdownMenuItem onClick={handleSignOut}>
-                Sign out
+                <div className="flex items-center w-full">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
