@@ -11,7 +11,7 @@ import { AlertCircle, User, Mail, Lock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function SignupForm() {
-  const [username, setUsername] = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -27,7 +27,7 @@ export default function SignupForm() {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await response.json();
@@ -60,17 +60,17 @@ export default function SignupForm() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium">
-                Username
+              <Label htmlFor="name" className="text-sm font-medium">
+                Name
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input 
-                  id="username" 
-                  placeholder="johndoe" 
+                  id="name" 
+                  placeholder="John Doe" 
                   required 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="pl-10"
                 />
               </div>

@@ -8,51 +8,29 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { event, session } = await request.json();
+    const { email, password } = await request.json();
 
-    if (event === 'SIGNED_IN') {
-      const user = session?.user;
-      if (!user) throw new Error('No user in session');
-
-      // Check if user exists in users table
-      const { data: userData, error: fetchError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-
-      if (!userData) {
-        // Create new user if they don't exist
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: user.id,
-              email: user.email,
-              credits: 10000,
-              name: user.user_metadata?.full_name,
-              avatar_url: user.user_metadata?.avatar_url
-            }
-          ]);
-
-        if (insertError) throw insertError;
-      }
-
+    if (!email || !password) {
       return NextResponse.json({ 
-        success: true, 
-        message: 'Login successful',
-        user
-      });
+        success: false, 
+        message: 'Email and password are required' 
+      }, { status: 400 });
+    }
+
+    const { data: { user }, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw error;
     }
 
     return NextResponse.json({ 
-      success: false, 
-      message: 'Invalid event' 
-    }, { status: 400 });
+      success: true, 
+      message: 'Login successful',
+      user
+    });
 
   } catch (error: any) {
     console.error('Login error:', error);

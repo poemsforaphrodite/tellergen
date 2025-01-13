@@ -5,11 +5,16 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json();
-    console.log('Signup attempt:', { email }); // Don't log passwords
+
+    if (!email || !password || !name) {
+      return NextResponse.json(
+        { success: false, message: 'Email, password, and name are required' },
+        { status: 400 }
+      );
+    }
 
     const supabase = createRouteHandlerClient({ cookies });
 
-    // Sign up the user with Supabase
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -21,14 +26,12 @@ export async function POST(request: Request) {
     });
 
     if (signUpError) {
-      console.error('Signup error:', signUpError);
       return NextResponse.json(
         { success: false, message: signUpError.message },
         { status: 400 }
       );
     }
 
-    // Create initial user record in the users table
     const { error: insertError } = await supabase
       .from('users')
       .insert([
@@ -41,8 +44,6 @@ export async function POST(request: Request) {
       ]);
 
     if (insertError) {
-      console.error('Database error:', insertError);
-      // If there's an error creating the user record, we should clean up the auth user
       if (authData.user?.id) {
         await supabase.auth.admin.deleteUser(authData.user.id);
       }
@@ -58,7 +59,6 @@ export async function POST(request: Request) {
       user: authData.user
     });
   } catch (error) {
-    console.error('Signup error:', error);
     return NextResponse.json(
       { success: false, message: 'An error occurred during signup' },
       { status: 500 }
